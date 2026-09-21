@@ -5,7 +5,7 @@ A direct service marketplace connecting customers with verified electricians, pl
 
 ### Why this exists
 
-Most home service apps (like Urban Company) act as centralized middlemen:
+Most home service apps act as centralized middlemen:
 1. **High commission cuts:** They take 20% to 35% from every job, cutting into the worker's earnings.
 2. **Unpredictable hourly billing:** Customers get billed by the hour or through hidden surge prices, leading to distrust over job duration and final costs.
 3. **No real guild oversight:** "Background checks" are often just basic phone OTP verification with no tie-in to actual trade skill or official registries.
