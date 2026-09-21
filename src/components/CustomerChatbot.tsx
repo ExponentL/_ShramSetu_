@@ -468,7 +468,7 @@ export const CustomerChatbot: React.FC = () => {
   const adminGst = totalCost - workerEarning - welfarePool;
 
   return (
-    <aside aria-label="Customer Support Desk" className="fixed bottom-4 right-4 sm:bottom-5 sm:right-5 z-50 font-sans max-w-[calc(100vw-2rem)]">
+    <aside aria-label="Customer Support Desk" className="fixed bottom-20 right-3 sm:bottom-5 sm:right-5 z-50 font-sans max-w-[calc(100vw-1.5rem)]">
       {/* Fixed Support Button (? Help & Support) */}
       {!isOpen && (
         <button
@@ -477,14 +477,15 @@ export const CustomerChatbot: React.FC = () => {
             setIsOpen(true);
             setHasUnread(false);
           }}
-          className="group relative flex items-center gap-2 px-3.5 py-2.5 rounded-lg bg-[#17324D] hover:bg-[#112437] text-white shadow-md border border-[#224466] transition-all duration-150 cursor-pointer select-none"
+          className="group relative flex items-center gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-lg bg-[#17324D] hover:bg-[#112437] text-white shadow-md border border-[#224466] transition-all duration-150 cursor-pointer select-none"
           aria-label="Open customer help center"
         >
           <div className="w-5 h-5 rounded-md bg-[#167A5B] flex items-center justify-center text-white text-[11px] font-bold">
             ?
           </div>
           <div className="flex items-center gap-1.5 text-xs font-bold">
-            <span>Help &amp; Support</span>
+            <span className="hidden xs:inline">Help &amp; Support</span>
+            <span className="xs:hidden">Help</span>
             <Headphones className="w-3.5 h-3.5 text-slate-300" />
           </div>
           {hasUnread && (
@@ -497,7 +498,7 @@ export const CustomerChatbot: React.FC = () => {
       {isOpen && (
         <div
           id="chatbot-panel"
-          className="w-[calc(100vw-2rem)] sm:w-[410px] max-w-[410px] h-[580px] max-h-[85vh] bg-white rounded-xl shadow-2xl border border-[#E4E7EC] flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200"
+          className="w-[calc(100vw-1.5rem)] sm:w-[410px] max-w-[410px] h-[520px] max-h-[75vh] sm:max-h-[85vh] bg-white rounded-xl shadow-2xl border border-[#E4E7EC] flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200"
         >
           {/* Institutional Header */}
           <div className="bg-[#17324D] text-white p-4 flex items-center justify-between border-b border-[#224466]">

@@ -117,23 +117,23 @@ export const Navbar: React.FC = () => {
       {/* 3. MAIN INSTITUTIONAL NAVBAR */}
       <header className="sticky top-0 z-40 bg-white border-b border-[#E4E7EC] shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20 gap-2 sm:gap-4">
+          <div className="flex items-center justify-between h-16 sm:h-20 gap-2 sm:gap-4">
             {/* Left: Brand Logo & Institutional Subtitle */}
-            <div className="flex items-center gap-4 xl:gap-8 min-w-0">
+            <div className="flex items-center gap-2 sm:gap-4 xl:gap-8 min-w-0">
               <button
                 id="brand-logo-btn"
                 onClick={() => navigateTo(currentRole === 'customer' ? 'explore' : 'worker_dashboard')}
-                className="flex items-center gap-2.5 sm:gap-3 text-left group cursor-pointer focus:outline-none shrink-0"
+                className="flex items-center gap-2 sm:gap-3 text-left group cursor-pointer focus:outline-none shrink-0"
               >
-                <div className="w-10 h-10 rounded-xl bg-[#17324D] text-white flex items-center justify-center font-black text-sm tracking-tight shadow-xs transition-transform group-hover:scale-105 border border-[#224466] shrink-0">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[#17324D] text-white flex items-center justify-center font-black text-xs sm:text-sm tracking-tight shadow-xs transition-transform group-hover:scale-105 border border-[#224466] shrink-0">
                   SS
                 </div>
                 <div className="flex flex-col">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-lg font-black tracking-tight text-[#17324D] leading-none">
+                  <div className="flex items-center gap-1 sm:gap-1.5">
+                    <span className="text-base sm:text-lg font-black tracking-tight text-[#17324D] leading-none">
                       ShramSetu
                     </span>
-                    <span className="text-[11px] font-semibold text-slate-500">
+                    <span className="text-[10px] sm:text-[11px] font-semibold text-slate-500">
                       श्रमसेतु
                     </span>
                   </div>
@@ -190,7 +190,7 @@ export const Navbar: React.FC = () => {
             </div>
 
             {/* Right: Location, Emergency, Notifications, Profile */}
-            <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+            <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
               {/* Location Selector (Available on wide screens or via hero/mobile) */}
               <button
                 type="button"
@@ -206,7 +206,7 @@ export const Navbar: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsEmergencyModalOpen(true)}
-                className="flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#FEF3F2] hover:bg-[#FEE4E2] text-[#B42318] border border-[#FECDCA] text-xs font-bold transition-colors cursor-pointer shrink-0"
+                className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg bg-[#FEF3F2] hover:bg-[#FEE4E2] text-[#B42318] border border-[#FECDCA] text-xs font-bold transition-colors cursor-pointer shrink-0"
                 title="Emergency electrician, water leak or plumbing assistance"
               >
                 <AlertTriangle className="w-3.5 h-3.5 text-[#B42318] shrink-0" />
@@ -260,19 +260,19 @@ export const Navbar: React.FC = () => {
                 )}
               </div>
 
-              {/* Customer Profile Dropdown - ALWAYS Fully Visible */}
+              {/* Customer Profile Dropdown */}
               <div className="relative shrink-0">
                 <button
                   type="button"
                   id="nav-profile-btn"
                   onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-[#D0D5DD] hover:bg-slate-100 transition-colors cursor-pointer shrink-0 bg-white"
+                  className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1.5 rounded-lg border border-[#D0D5DD] hover:bg-slate-100 transition-colors cursor-pointer shrink-0 bg-white"
                   title="Customer account options"
                 >
-                  <div className="w-7 h-7 rounded-md bg-[#17324D] text-white flex items-center justify-center text-xs font-bold shrink-0">
+                  <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-[#17324D] text-white flex items-center justify-center text-xs font-bold shrink-0">
                     {currentUser?.name ? currentUser.name.slice(0, 1).toUpperCase() : 'C'}
                   </div>
-                  <span className="text-xs font-bold text-slate-800 whitespace-nowrap">
+                  <span className="text-xs font-bold text-slate-800 whitespace-nowrap hidden sm:inline">
                     {currentUser?.name || 'Customer'}
                   </span>
                   <ChevronDown className="w-3.5 h-3.5 text-slate-500 shrink-0" />

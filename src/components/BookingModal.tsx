@@ -200,20 +200,20 @@ export const BookingModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 overflow-y-auto">
-      <div className="bg-white w-full max-w-2xl rounded-3xl shadow-xl border border-neutral-200 overflow-hidden my-6 flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-xs p-0 sm:p-4 overflow-y-auto">
+      <div className="bg-white w-full max-w-2xl rounded-t-2xl sm:rounded-3xl shadow-xl border border-neutral-200 overflow-hidden my-0 sm:my-6 flex flex-col max-h-[92vh] sm:max-h-[90vh]">
         {/* Header */}
-        <div className="px-6 py-4 bg-white border-b border-[#E4E7EC] flex items-center justify-between">
+        <div className="px-4 sm:px-6 py-3.5 sm:py-4 bg-white border-b border-[#E4E7EC] flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-base font-bold text-[#17324D]">
+              <h2 className="text-sm sm:text-base font-bold text-[#17324D]">
                 {language === 'hi' ? 'सहकारी सेवा बुकिंग' : 'Cooperative Service Booking'}
               </h2>
               <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-md bg-[#EDF7F2] text-[#167A5B] border border-[#C6E7D8]">
                 {t.common.step} {step} {t.common.of} 7
               </span>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
               {language === 'hi'
                 ? 'पारदर्शी सेवा शुल्क • 90% प्रत्यक्ष कारीगर पारिश्रमिक'
                 : 'Transparent job pricing • 100% direct artisan remuneration'}
@@ -227,9 +227,25 @@ export const BookingModal: React.FC = () => {
           </button>
         </div>
 
-        {/* Horizontal Numbered Step Progress Bar */}
-        <div className="px-6 py-2.5 bg-[#F7F8F6] border-b border-[#E4E7EC] overflow-x-auto">
-          <div className="flex items-center justify-between min-w-[500px] gap-2">
+        {/* Numbered Step Progress Bar */}
+        <div className="px-4 sm:px-6 py-2.5 bg-[#F7F8F6] border-b border-[#E4E7EC]">
+          {/* Mobile step progress summary */}
+          <div className="sm:hidden flex items-center justify-between gap-3">
+            <span className="text-xs font-bold text-[#17324D]">
+              Step {step} of 7: {[
+                'Service', 'Location', 'Schedule', 'Worker', 'Estimate', 'Payment', 'Confirmed'
+              ][step - 1]}
+            </span>
+            <div className="flex-1 max-w-[120px] bg-slate-200 h-1.5 rounded-full overflow-hidden">
+              <div
+                className="bg-[#17324D] h-full transition-all duration-300 rounded-full"
+                style={{ width: `${(step / 7) * 100}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Desktop/Tablet full numbered steps */}
+          <div className="hidden sm:flex items-center justify-between min-w-[500px] gap-2 overflow-x-auto">
             {[
               { num: 1, label: 'Service' },
               { num: 2, label: 'Location' },
@@ -265,7 +281,7 @@ export const BookingModal: React.FC = () => {
         </div>
 
         {/* Form Body */}
-        <div className="p-6 overflow-y-auto flex-1 space-y-5">
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-4 sm:space-y-5">
           {/* STEP 1: SERVICE DETAILS */}
           {step === 1 && (
             <div className="space-y-4">

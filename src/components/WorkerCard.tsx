@@ -109,12 +109,12 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({ worker, onSelectWorker }
       </div>
 
       {/* Bottom Actions: View Profile & Book Service (Strict Job-Based Pricing) */}
-      <div className="px-5 py-3.5 bg-[#F7F8F6] border-t border-[#E4E7EC] flex items-center gap-2.5">
+      <div className="px-4 sm:px-5 py-3 sm:py-3.5 bg-[#F7F8F6] border-t border-[#E4E7EC] flex items-center gap-2 sm:gap-2.5">
         <button
           type="button"
           id={`view-profile-${worker.id}`}
           onClick={() => setSelectedWorkerForProfile(worker)}
-          className="flex-1 py-2 px-2.5 sm:px-3 rounded-lg border border-[#D0D5DD] hover:border-slate-400 text-xs font-bold text-slate-800 hover:text-slate-950 transition-colors cursor-pointer bg-white text-center shadow-2xs whitespace-nowrap shrink-0"
+          className="flex-1 min-h-[40px] py-2 px-2.5 sm:px-3 rounded-lg border border-[#D0D5DD] hover:border-slate-400 text-xs font-bold text-slate-800 hover:text-slate-950 transition-colors cursor-pointer bg-white text-center shadow-2xs whitespace-nowrap shrink-0 flex items-center justify-center"
         >
           View Profile
         </button>
@@ -128,7 +128,7 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({ worker, onSelectWorker }
               setBookingTargetWorker(worker);
             }
           }}
-          className="flex-1 py-2 px-2.5 sm:px-3 rounded-lg bg-[#17324D] hover:bg-[#112437] text-white text-xs font-bold transition-all cursor-pointer text-center shadow-xs whitespace-nowrap shrink-0 border border-[#224466]"
+          className="flex-1 min-h-[40px] py-2 px-2.5 sm:px-3 rounded-lg bg-[#17324D] hover:bg-[#112437] text-white text-xs font-bold transition-all cursor-pointer text-center shadow-xs whitespace-nowrap shrink-0 border border-[#224466] flex items-center justify-center"
         >
           Book Service
         </button>

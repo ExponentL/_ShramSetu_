@@ -29,6 +29,7 @@ import {
   HeartHandshake,
   Map,
   LayoutGrid,
+  ChevronDown,
 } from 'lucide-react';
 
 interface CustomerHomeProps {
@@ -63,6 +64,7 @@ export const CustomerHome: React.FC<CustomerHomeProps> = ({ onNavigateToTracking
   // Sorting & View Mode
   const [sortBy, setSortBy] = useState<'recommended' | 'rating' | 'jobs' | 'experience'>('recommended');
   const [directoryViewMode, setDirectoryViewMode] = useState<'grid' | 'map'>('grid');
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState<boolean>(false);
 
   // Search input state & suggestions
   const [localSearch, setLocalSearch] = useState('');
@@ -195,7 +197,7 @@ export const CustomerHome: React.FC<CustomerHomeProps> = ({ onNavigateToTracking
   }, [filteredWorkers]);
 
   return (
-    <div className="space-y-12 pb-16 w-full max-w-full">
+    <div className="space-y-8 sm:space-y-12 pb-24 sm:pb-16 w-full max-w-full">
       {/* 1. INSTITUTIONAL SPLIT HERO SECTION & DISPATCH CONSOLE */}
       <section className="pt-2 sm:pt-6 pb-4">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -730,10 +732,43 @@ export const CustomerHome: React.FC<CustomerHomeProps> = ({ onNavigateToTracking
           </div>
         </div>
 
+        {/* Mobile Filter Toggle Bar */}
+        <div className="lg:hidden flex items-center justify-between gap-3 bg-white p-3 rounded-xl border border-[#D0D5DD] shadow-2xs">
+          <button
+            type="button"
+            onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
+            className="flex items-center gap-2 text-xs font-bold text-[#17324D] cursor-pointer"
+          >
+            <SlidersHorizontal className="w-4 h-4 text-slate-600" />
+            <span>
+              Filter Workers{' '}
+              {(filterGovVerified || filterCoopVerified || filterPlatformVerified || filterAvailableOnly || filterMinRating > 0 || selectedCategory !== 'ALL') ? '(Active)' : ''}
+            </span>
+            <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${mobileFiltersOpen ? 'rotate-180' : ''}`} />
+          </button>
+          {(filterGovVerified || filterCoopVerified || filterPlatformVerified || filterAvailableOnly || filterMinRating > 0 || selectedCategory !== 'ALL') && (
+            <button
+              type="button"
+              onClick={() => {
+                setFilterGovVerified(false);
+                setFilterCoopVerified(false);
+                setFilterPlatformVerified(false);
+                setFilterAvailableOnly(false);
+                setFilterMinRating(0);
+                setSelectedCategory('ALL');
+                setLocalSearch('');
+              }}
+              className="text-[11px] font-bold text-[#B42318] hover:underline cursor-pointer"
+            >
+              Reset Filters
+            </button>
+          )}
+        </div>
+
         {/* Directory Layout: Left Filters + Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
           {/* Left Filter Sidebar */}
-          <aside className="bg-white rounded-xl border border-[#E4E7EC] p-5 space-y-5 lg:sticky lg:top-24 max-h-[calc(100vh-7rem)] overflow-y-auto shadow-xs">
+          <aside className={`bg-white rounded-xl border border-[#E4E7EC] p-5 space-y-5 lg:sticky lg:top-24 max-h-[calc(100vh-7rem)] overflow-y-auto shadow-xs ${mobileFiltersOpen ? 'block' : 'hidden lg:block'}`}>
             <div className="flex items-center justify-between pb-3 border-b border-[#E4E7EC]">
               <span className="text-xs font-bold text-[#17324D] uppercase tracking-wider flex items-center gap-1.5">
                 <SlidersHorizontal className="w-3.5 h-3.5 text-slate-500" />
