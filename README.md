@@ -43,3 +43,5 @@ We do not mark a worker as "Government Verified" based on a marketing checkbox:
 - **Testing:** 73 automated tests covering provider fail-safes, privacy data sanitization, tariff rules, and responsive layouts (`bun test`)
 
 ---
+
+**URL:** https://shramsetuu.netlify.app/
