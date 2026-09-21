@@ -203,7 +203,7 @@ export const CustomerHome: React.FC<CustomerHomeProps> = ({ onNavigateToTracking
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Column (60%): Public-Service & Cooperative Mission */}
           <div className="lg:col-span-7 space-y-5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs font-semibold bg-[#EDF7F2] text-[#167A5B] border border-[#C6E7D8]">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs font-semibold bg-[#EDF7F2] text-[#167A5B] border border-[#C6E7D8] badge-shimmer">
               <span className="w-2 h-2 rounded-full bg-[#167A5B] shrink-0" />
               <span>श्रम एवं रोजगार सहकारिता पहल • MSCS Act Registered</span>
             </div>
@@ -216,43 +216,43 @@ export const CustomerHome: React.FC<CustomerHomeProps> = ({ onNavigateToTracking
             </p>
 
             <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-xl">
-              Connecting households, housing societies, and commercial enterprises with certified electricians, plumbers, carpenters, and technicians under transparent institutional governance.
+              Direct access to certified electricians, plumbers, carpenters &amp; technicians under transparent cooperative governance.
             </p>
 
             {/* 3 Core Institutional Pillars */}
-            <div className="space-y-2.5 pt-1 text-xs text-slate-700">
-              <div className="flex items-center gap-2.5">
-                <span className="w-5 h-5 rounded-md bg-[#EDF7F2] text-[#167A5B] flex items-center justify-center font-bold text-xs shrink-0 border border-[#C6E7D8]">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1 text-xs">
+              <div className="flex items-center gap-2.5 p-2.5 rounded-lg bg-white border border-[#E4E7EC] card-interactive shadow-2xs">
+                <span className="w-6 h-6 rounded-md bg-[#EDF7F2] text-[#167A5B] flex items-center justify-center font-bold text-xs shrink-0 border border-[#C6E7D8]">
                   ✓
                 </span>
-                <span className="font-semibold text-slate-800">
-                  100% Direct Worker Remuneration
-                </span>
-                <span className="text-slate-500">— Zero intermediary commission on baseline labour</span>
+                <div>
+                  <div className="font-bold text-slate-800 leading-tight">100% Direct Pay</div>
+                  <div className="text-[11px] text-slate-500">Zero commission</div>
+                </div>
               </div>
-              <div className="flex items-center gap-2.5">
-                <span className="w-5 h-5 rounded-md bg-[#EDF7F2] text-[#167A5B] flex items-center justify-center font-bold text-xs shrink-0 border border-[#C6E7D8]">
+              <div className="flex items-center gap-2.5 p-2.5 rounded-lg bg-white border border-[#E4E7EC] card-interactive shadow-2xs">
+                <span className="w-6 h-6 rounded-md bg-[#EDF7F2] text-[#167A5B] flex items-center justify-center font-bold text-xs shrink-0 border border-[#C6E7D8]">
                   ✓
                 </span>
-                <span className="font-semibold text-slate-800">
-                  Triple-Layer Verification
-                </span>
-                <span className="text-slate-500">— Government records, cooperative federation audit &amp; identity checks</span>
+                <div>
+                  <div className="font-bold text-slate-800 leading-tight">Triple-Layer Audit</div>
+                  <div className="text-[11px] text-slate-500">Gov &amp; trade verified</div>
+                </div>
               </div>
-              <div className="flex items-center gap-2.5">
-                <span className="w-5 h-5 rounded-md bg-[#EDF7F2] text-[#167A5B] flex items-center justify-center font-bold text-xs shrink-0 border border-[#C6E7D8]">
+              <div className="flex items-center gap-2.5 p-2.5 rounded-lg bg-white border border-[#E4E7EC] card-interactive shadow-2xs">
+                <span className="w-6 h-6 rounded-md bg-[#EDF7F2] text-[#167A5B] flex items-center justify-center font-bold text-xs shrink-0 border border-[#C6E7D8]">
                   ✓
                 </span>
-                <span className="font-semibold text-slate-800">
-                  Transparent Job-Based Pricing
-                </span>
-                <span className="text-slate-500">— Standard task tariffs with full digital receipt breakdown</span>
+                <div>
+                  <div className="font-bold text-slate-800 leading-tight">Job-Based Pricing</div>
+                  <div className="text-[11px] text-slate-500">Standard task tariffs</div>
+                </div>
               </div>
             </div>
 
             {/* Public Stat Indicator */}
-            <div className="pt-2 flex items-center gap-2 text-xs text-slate-500">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <div className="pt-2 flex items-center gap-2.5 text-xs text-slate-600">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 radar-beacon shrink-0" />
               <span>
                 <strong>48 Verified Artisans</strong> active in {selectedCity || 'Bahadurgarh & West Delhi NCR'}
               </span>
@@ -260,7 +260,7 @@ export const CustomerHome: React.FC<CustomerHomeProps> = ({ onNavigateToTracking
           </div>
 
           {/* Right Column (40%): Institutional Service-Search & Dispatch Panel */}
-          <div className="lg:col-span-5 bg-white border border-[#D0D5DD] rounded-xl p-5 sm:p-6 shadow-xs space-y-4">
+          <div className="lg:col-span-5 bg-white border border-[#D0D5DD] rounded-xl p-5 sm:p-6 shadow-xs space-y-4 card-interactive">
             <div>
               <div className="text-[11px] font-bold uppercase tracking-wider text-[#167A5B]">
                 Cooperative Dispatch Panel
@@ -428,14 +428,14 @@ export const CustomerHome: React.FC<CustomerHomeProps> = ({ onNavigateToTracking
                     const el = document.getElementById('workers-directory-section');
                     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
                   }}
-                  className={`p-3.5 rounded-xl border text-left transition-all duration-150 cursor-pointer flex flex-col justify-between h-32 ${
+                  className={`p-3.5 rounded-xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between h-32 group card-interactive ${
                     isSelected
                       ? 'bg-[#17324D] text-white border-[#17324D] shadow-sm'
                       : 'bg-white hover:bg-[#F7F8F6] border-[#E4E7EC] text-slate-900 shadow-2xs hover:border-slate-400'
                   }`}
                 >
                   <div
-                    className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 border ${
+                    className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 border transition-transform duration-200 group-hover:scale-110 ${
                       isSelected
                         ? 'bg-[#224466] border-[#2c5580] text-white'
                         : 'bg-[#F7F8F6] border-[#E4E7EC] text-[#17324D]'
@@ -463,7 +463,7 @@ export const CustomerHome: React.FC<CustomerHomeProps> = ({ onNavigateToTracking
       </section>
 
       {/* 2. INTERACTIVE LOCATION COMPONENT */}
-      <section className="bg-white border border-[#E4E7EC] rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+      <section className="bg-white border border-[#E4E7EC] rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs card-interactive">
         <div className="flex items-center gap-3.5">
           <div className="w-10 h-10 rounded-lg bg-[#EDF7F2] border border-[#C6E7D8] flex items-center justify-center text-[#167A5B] shrink-0">
             <MapPin className="w-5 h-5" />
@@ -475,7 +475,7 @@ export const CustomerHome: React.FC<CustomerHomeProps> = ({ onNavigateToTracking
               <span className="w-2 h-2 rounded-full bg-[#167A5B]" />
             </div>
             <div className="text-xs text-slate-600 mt-0.5">
-              48 verified trade professionals active across Electrical, Plumbing, Carpentry, Cleaning, and Appliance Repair.
+              48 active certified professionals ready for rapid cooperative dispatch.
             </div>
           </div>
         </div>
@@ -620,52 +620,52 @@ export const CustomerHome: React.FC<CustomerHomeProps> = ({ onNavigateToTracking
             Why Customers Choose ShramSetu
           </h2>
           <p className="text-xs sm:text-sm text-slate-600 mt-1.5 leading-relaxed">
-            Directly connected with registered labour cooperatives to ensure worker safety, trade skill credibility, and transparent job pricing without middlemen exploitation.
+            Directly connected with registered labour cooperatives: safe, skilled, transparent.
           </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Benefit 1 */}
-          <div className="space-y-2 p-4 rounded-lg bg-[#F7F8F6] border border-[#E4E7EC]">
-            <div className="w-8 h-8 rounded-md bg-[#EDF7F2] border border-[#C6E7D8] flex items-center justify-center text-[#167A5B] font-black text-xs">
+          <div className="space-y-2 p-4 rounded-lg bg-[#F7F8F6] border border-[#E4E7EC] card-interactive group">
+            <div className="w-8 h-8 rounded-md bg-[#EDF7F2] border border-[#C6E7D8] flex items-center justify-center text-[#167A5B] font-black text-xs transition-transform duration-200 group-hover:scale-110">
               ✓
             </div>
             <h3 className="font-bold text-xs text-[#17324D]">3-Layer Verification</h3>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Every professional undergoes trade certification validation, cooperative federation membership audit, and platform KYC checks.
+              Trade skill certification, cooperative audit &amp; verified KYC.
             </p>
           </div>
 
           {/* Benefit 2 */}
-          <div className="space-y-2 p-4 rounded-lg bg-[#F7F8F6] border border-[#E4E7EC]">
-            <div className="w-8 h-8 rounded-md bg-[#EDF7F2] border border-[#C6E7D8] flex items-center justify-center text-[#167A5B] font-black text-xs">
+          <div className="space-y-2 p-4 rounded-lg bg-[#F7F8F6] border border-[#E4E7EC] card-interactive group">
+            <div className="w-8 h-8 rounded-md bg-[#EDF7F2] border border-[#C6E7D8] flex items-center justify-center text-[#167A5B] font-black text-xs transition-transform duration-200 group-hover:scale-110">
               ✓
             </div>
             <h3 className="font-bold text-xs text-[#17324D]">Cooperative-Backed</h3>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Workers belong to registered labour cooperative societies with fair welfare allocation, local accountability, and trade master support.
+              Registered societies ensuring trade accountability &amp; master support.
             </p>
           </div>
 
           {/* Benefit 3 */}
-          <div className="space-y-2 p-4 rounded-lg bg-[#F7F8F6] border border-[#E4E7EC]">
-            <div className="w-8 h-8 rounded-md bg-[#EDF7F2] border border-[#C6E7D8] flex items-center justify-center text-[#167A5B] font-black text-xs">
+          <div className="space-y-2 p-4 rounded-lg bg-[#F7F8F6] border border-[#E4E7EC] card-interactive group">
+            <div className="w-8 h-8 rounded-md bg-[#EDF7F2] border border-[#C6E7D8] flex items-center justify-center text-[#167A5B] font-black text-xs transition-transform duration-200 group-hover:scale-110">
               ✓
             </div>
             <h3 className="font-bold text-xs text-[#17324D]">Transparent Job Pricing</h3>
             <p className="text-xs text-slate-600 leading-relaxed">
-              No hidden surge charges or arbitrary rates. Standard task tariffs with 100% baseline labour paid directly to workers.
+              Standard task tariffs with 100% baseline labor paid directly to workers.
             </p>
           </div>
 
           {/* Benefit 4 */}
-          <div className="space-y-2 p-4 rounded-lg bg-[#F7F8F6] border border-[#E4E7EC]">
-            <div className="w-8 h-8 rounded-md bg-[#EDF7F2] border border-[#C6E7D8] flex items-center justify-center text-[#167A5B] font-black text-xs">
+          <div className="space-y-2 p-4 rounded-lg bg-[#F7F8F6] border border-[#E4E7EC] card-interactive group">
+            <div className="w-8 h-8 rounded-md bg-[#EDF7F2] border border-[#C6E7D8] flex items-center justify-center text-[#167A5B] font-black text-xs transition-transform duration-200 group-hover:scale-110">
               ✓
             </div>
             <h3 className="font-bold text-xs text-[#17324D]">Worker Arrival Tracking</h3>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Track your assigned professional live on an interactive map with turn-by-turn route and safe one-time verification OTP upon arrival.
+              Live interactive map tracking with secure one-time arrival OTP.
             </p>
           </div>
         </div>

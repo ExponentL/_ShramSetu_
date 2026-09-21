@@ -79,6 +79,61 @@ button, a, input, select, textarea {
   background: #94a3b8;
 }
 
+/* -------------------------------------------------------------
+   Interactive Micro-Interactions & Animations
+   ------------------------------------------------------------- */
+
+@keyframes pulseRadar {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(22, 122, 91, 0.4);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 8px rgba(22, 122, 91, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(22, 122, 91, 0);
+  }
+}
+
+.radar-beacon {
+  animation: pulseRadar 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes shimmerWave {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.badge-shimmer {
+  background: linear-gradient(90deg, rgba(237,247,242,1) 0%, rgba(198,231,216,0.7) 50%, rgba(237,247,242,1) 100%);
+  background-size: 200% 100%;
+  animation: shimmerWave 3.5s ease-in-out infinite;
+}
+
+.card-interactive {
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease;
+}
+
+.card-interactive:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px -5px rgba(23, 50, 77, 0.08), 0 8px 10px -6px rgba(23, 50, 77, 0.04);
+}
+
+.btn-tactile {
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), filter 0.15s ease, background-color 0.15s ease;
+}
+
+.btn-tactile:active {
+  transform: scale(0.97);
+}
+
 /* Accessibility High Contrast Mode */
 .high-contrast {
   --color-warm-bg: #ffffff;
@@ -94,3 +149,4 @@ button, a, input, select, textarea {
 .high-contrast a {
   font-weight: 700 !important;
 }
+

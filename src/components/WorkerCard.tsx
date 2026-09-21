@@ -33,11 +33,11 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({ worker, onSelectWorker }
     : [tradeDisplay];
 
   return (
-    <div className="bg-white rounded-xl border border-[#E4E7EC] shadow-xs hover:shadow-md hover:border-slate-400 transition-all duration-150 flex flex-col justify-between overflow-hidden group">
+    <div className="bg-white rounded-xl border border-[#E4E7EC] shadow-xs card-interactive flex flex-col justify-between overflow-hidden group">
       <div className="p-5">
         {/* Top: Portrait visual anchor + Core Info */}
         <div className="flex items-start gap-3.5">
-          <div className="relative shrink-0">
+          <div className="relative shrink-0 transition-transform duration-200 group-hover:scale-105">
             <TradeBadgeAvatar
               trade={worker.primaryTrade}
               name={worker.name}
@@ -57,7 +57,7 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({ worker, onSelectWorker }
 
             {isVerified && (
               <div className="mt-2">
-                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#167A5B] bg-[#EDF7F2] px-2 py-0.5 rounded-md border border-[#C6E7D8] whitespace-nowrap">
+                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#167A5B] bg-[#EDF7F2] px-2 py-0.5 rounded-md border border-[#C6E7D8] whitespace-nowrap badge-shimmer">
                   <CheckCircle2 className="w-3.5 h-3.5 text-[#167A5B] shrink-0" />
                   <span>Verified Worker</span>
                 </span>
@@ -114,7 +114,7 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({ worker, onSelectWorker }
           type="button"
           id={`view-profile-${worker.id}`}
           onClick={() => setSelectedWorkerForProfile(worker)}
-          className="flex-1 min-h-[40px] py-2 px-2.5 sm:px-3 rounded-lg border border-[#D0D5DD] hover:border-slate-400 text-xs font-bold text-slate-800 hover:text-slate-950 transition-colors cursor-pointer bg-white text-center shadow-2xs whitespace-nowrap shrink-0 flex items-center justify-center"
+          className="flex-1 min-h-[40px] py-2 px-2.5 sm:px-3 rounded-lg border border-[#D0D5DD] hover:border-slate-400 text-xs font-bold text-slate-800 hover:text-slate-950 transition-colors cursor-pointer bg-white text-center shadow-2xs whitespace-nowrap shrink-0 flex items-center justify-center btn-tactile"
         >
           View Profile
         </button>
@@ -128,7 +128,7 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({ worker, onSelectWorker }
               setBookingTargetWorker(worker);
             }
           }}
-          className="flex-1 min-h-[40px] py-2 px-2.5 sm:px-3 rounded-lg bg-[#17324D] hover:bg-[#112437] text-white text-xs font-bold transition-all cursor-pointer text-center shadow-xs whitespace-nowrap shrink-0 border border-[#224466] flex items-center justify-center"
+          className="flex-1 min-h-[40px] py-2 px-2.5 sm:px-3 rounded-lg bg-[#17324D] hover:bg-[#112437] text-white text-xs font-bold transition-all cursor-pointer text-center shadow-xs whitespace-nowrap shrink-0 border border-[#224466] flex items-center justify-center btn-tactile"
         >
           Book Service
         </button>
