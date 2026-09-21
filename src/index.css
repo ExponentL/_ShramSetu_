@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+/* -------------------------------------------------------------
+   ShramSetu Institutional Public-Service Design System
+   Palette: Deep Navy (#17324D), Dark Slate (#3F4A54),
+            Warm White (#F7F8F6), Institutional Green (#167A5B),
+            Dark Red (#B42318), Muted Saffron (#C25E00)
+   ------------------------------------------------------------- */
+
+:root {
+  color-scheme: light;
+  --color-navy: #17324D;
+  --color-navy-hover: #112538;
+  --color-slate: #3F4A54;
+  --color-warm-bg: #F7F8F6;
+  --color-surface: #FFFFFF;
+  --color-inst-green: #167A5B;
+  --color-inst-green-hover: #126349;
+  --color-dark-red: #B42318;
+  --color-saffron: #C25E00;
+  --color-border: #D0D5DD;
+  --color-border-light: #E4E7EC;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+}
+
+body {
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  background-color: var(--color-warm-bg);
+  color: #1A202C;
+  overflow-x: clip;
+  max-width: 100vw;
+  width: 100%;
+  position: relative;
+}
+
+#root {
+  max-width: 100%;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Institutional focus styles */
+:focus-visible {
+  outline: 2px solid var(--color-navy);
+  outline-offset: 2px;
+}
+
+/* Clean, restrained transitions */
+button, a, input, select, textarea {
+  transition-property: color, background-color, border-color, box-shadow, opacity;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  transition-duration: 150ms;
+}
+
+/* Institutional Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Accessibility High Contrast Mode */
+.high-contrast {
+  --color-warm-bg: #ffffff;
+}
+
+.high-contrast body,
+.high-contrast #root {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+.high-contrast button,
+.high-contrast a {
+  font-weight: 700 !important;
+}

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      (function () {
+        // Prevent Uncaught TypeError: Cannot set property fetch of #<Window> which has only a getter
+        try {
+          var originalFetch = window.fetch;
+          if (originalFetch) {
+            var currentFetch = originalFetch;
+            try {
+              Object.defineProperty(window, 'fetch', {
+                get: function () {
+                  return currentFetch;
+                },
+                set: function (newFetch) {
+                  currentFetch = newFetch;
+                },
+                configurable: true,
+                enumerable: true,
+              });
+            } catch (e1) {
+              try {
+                var proto = Window.prototype;
+                Object.defineProperty(proto, 'fetch', {
+                  get: function () {
+                    return currentFetch;
+                  },
+                  set: function (newFetch) {
+                    currentFetch = newFetch;
+                  },
+                  configurable: true,
+                  enumerable: true,
+                });
+              } catch (e2) {}
+            }
+          }
+        } catch (err) {}
+
+        // Global safety catcher for getter-only property assignments from injected scripts
+        window.addEventListener(
+          'error',
+          function (e) {
+            if (e && e.message && e.message.includes('Cannot set property fetch of')) {
+              e.preventDefault();
+              if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+              return true;
+            }
+          },
+          true
+        );
+      })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ShramSetu - Labour Cooperative Service Marketplace</title>
+    <meta name="description" content="ShramSetu connects verified cooperative workers with households and institutions, featuring fair work distribution, live GPS tracking, welfare management, and multilingual support." />
+    <meta property="og:title" content="ShramSetu - Labour Cooperative Service Marketplace" />
+    <meta property="og:description" content="ShramSetu connects verified cooperative workers with households and institutions, featuring fair work distribution, live GPS tracking, welfare management, and multilingual support." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  </head>
+  <body class="bg-[#fafafa] text-neutral-900 antialiased selection:bg-neutral-900 selection:text-white w-full max-w-full">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

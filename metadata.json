@@ -1,0 +1,6 @@
+{
+  "name": "ShramSetu",
+  "description": "ShramSetu connects verified cooperative workers with households and institutions, featuring fair work distribution, live GPS tracking, worker welfare management, and multilingual support.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
