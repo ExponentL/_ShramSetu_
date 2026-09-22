@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { ServiceCategory, WorkerProfile } from '../types';
 import { TradeBadgeAvatar } from './TradeBadgeAvatar';
@@ -8,15 +8,81 @@ import {
   Clock,
   MapPin,
   ShieldCheck,
-  Zap,
   CreditCard,
-  QrCode,
   Building,
   CheckCircle2,
   AlertCircle,
-  Star,
-  Users,
+  Plus,
+  Minus,
+  ArrowRight,
+  ArrowLeft,
+  Navigation,
+  Check,
+  Layers,
+  Wrench,
+  Sparkles,
+  Zap,
+  Droplets,
+  Hammer,
+  Paintbrush,
+  Tv,
 } from 'lucide-react';
+
+interface ServiceItem {
+  id: string;
+  name: string;
+  category: ServiceCategory;
+  materialCost: number;
+  labourCost: number;
+  unit: string;
+  defaultQty?: number;
+}
+
+const SERVICE_ITEMS_CATALOG: ServiceItem[] = [
+  // Electrical (matches exact prompt example: 3 Fans + 6 Lights => Material ₹4,500 + Labour ₹1,500 = ₹6,000)
+  { id: 'elec-fan', name: 'Ceiling Fan', category: 'Electrical', materialCost: 1000, labourCost: 300, unit: 'Fan', defaultQty: 3 },
+  { id: 'elec-led', name: 'LED Lights', category: 'Electrical', materialCost: 250, labourCost: 100, unit: 'Fixture', defaultQty: 6 },
+  { id: 'elec-switch', name: 'Switchboard', category: 'Electrical', materialCost: 400, labourCost: 200, unit: 'Board' },
+  { id: 'elec-mcb', name: 'MCB / Fuse Box', category: 'Electrical', materialCost: 800, labourCost: 400, unit: 'Box' },
+
+  // Plumbing
+  { id: 'plumb-tap', name: 'Water Tap & Spindle', category: 'Plumbing', materialCost: 350, labourCost: 150, unit: 'Tap', defaultQty: 2 },
+  { id: 'plumb-flush', name: 'Flush Tank Valve Set', category: 'Plumbing', materialCost: 650, labourCost: 250, unit: 'Set', defaultQty: 1 },
+  { id: 'plumb-pipe', name: 'CPVC Pipe Joint Section', category: 'Plumbing', materialCost: 400, labourCost: 200, unit: 'Joint' },
+  { id: 'plumb-pump', name: 'Motor Pump Connection', category: 'Plumbing', materialCost: 1200, labourCost: 500, unit: 'Unit' },
+
+  // Carpentry
+  { id: 'carp-lock', name: 'Door Lock & Latch', category: 'Carpentry', materialCost: 850, labourCost: 350, unit: 'Lock', defaultQty: 1 },
+  { id: 'carp-plane', name: 'Door Planing & Alignment', category: 'Carpentry', materialCost: 150, labourCost: 250, unit: 'Door', defaultQty: 1 },
+  { id: 'carp-hinge', name: 'Cabinet Soft-Close Hinges', category: 'Carpentry', materialCost: 350, labourCost: 150, unit: 'Pair', defaultQty: 2 },
+  { id: 'carp-furniture', name: 'Wood Furniture Joint Repair', category: 'Carpentry', materialCost: 250, labourCost: 350, unit: 'Piece' },
+
+  // Cleaning
+  { id: 'clean-kitchen', name: 'Kitchen Degreasing & Scrub', category: 'Cleaning', materialCost: 350, labourCost: 550, unit: 'Room', defaultQty: 1 },
+  { id: 'clean-bath', name: 'Bathroom Stain & Tile Polish', category: 'Cleaning', materialCost: 250, labourCost: 350, unit: 'Bathroom', defaultQty: 1 },
+  { id: 'clean-floor', name: 'Floor Scrub & Sanitization', category: 'Cleaning', materialCost: 400, labourCost: 600, unit: 'Area' },
+
+  // Painting
+  { id: 'paint-primer', name: 'Waterproof Dampness Primer', category: 'Painting', materialCost: 750, labourCost: 450, unit: 'Wall', defaultQty: 1 },
+  { id: 'paint-emulsion', name: 'Interior Touch-up Paint', category: 'Painting', materialCost: 950, labourCost: 650, unit: 'Room' },
+
+  // Technician (Appliance)
+  { id: 'tech-geyser', name: 'Geyser Heating Element Coil', category: 'Technician', materialCost: 650, labourCost: 350, unit: 'Unit', defaultQty: 1 },
+  { id: 'tech-ac', name: 'AC Deep Coil Jet Service', category: 'Technician', materialCost: 500, labourCost: 400, unit: 'AC', defaultQty: 1 },
+  { id: 'tech-wm', name: 'Washing Machine Motor Belt', category: 'Technician', materialCost: 550, labourCost: 350, unit: 'Machine' },
+
+  // Gardening
+  { id: 'gard-prune', name: 'Lawn Mowing & Hedge Trim', category: 'Gardening', materialCost: 200, labourCost: 400, unit: 'Lawn', defaultQty: 1 },
+  { id: 'gard-soil', name: 'Organic Soil & Fertilizer Pack', category: 'Gardening', materialCost: 450, labourCost: 250, unit: 'Bed' },
+
+  // Driving
+  { id: 'driv-day', name: 'City Chauffeur Driver Service', category: 'Driving', materialCost: 0, labourCost: 750, unit: 'Trip', defaultQty: 1 },
+  { id: 'driv-highway', name: 'Highway Trip Chauffeur Service', category: 'Driving', materialCost: 0, labourCost: 1200, unit: 'Trip' },
+
+  // Domestic Help / Caregiving
+  { id: 'care-elder', name: 'Elder Care & Mobility Support', category: 'Domestic Help', materialCost: 150, labourCost: 650, unit: 'Session', defaultQty: 1 },
+  { id: 'care-recovery', name: 'Post-Surgery Patient Vital Assistance', category: 'Domestic Help', materialCost: 200, labourCost: 700, unit: 'Session' },
+];
 
 export const BookingModal: React.FC = () => {
   const {
@@ -33,33 +99,61 @@ export const BookingModal: React.FC = () => {
     governmentVerifications,
   } = useApp();
 
-  // Booking Flow Steps:
-  // 1: Service details
-  // 2: Location & Address
-  // 3: Date/Time
-  // 4: Worker Selection & Fair Allocation
-  // 5: Price Estimate & Confirmation
-  // 6: Digital Payment
-  // 7: Confirmed
+  // 7 Clean Steps:
+  // 1. Service
+  // 2. Requirements
+  // 3. Items & Quantity
+  // 4. Schedule
+  // 5. Address
+  // 6. Review
+  // 7. Confirm
   const [step, setStep] = useState<number>(1);
 
-  // Form State
+  // Step 1: Service
   const [serviceCategory, setServiceCategory] = useState<ServiceCategory>(
     bookingTargetWorker?.primaryTrade || (selectedCategory !== 'ALL' ? selectedCategory : 'Electrical')
   );
-  const [serviceDescription, setServiceDescription] = useState<string>('Standard diagnostic inspection and repair');
+
+  // Step 2: Requirements
+  const [serviceDescription, setServiceDescription] = useState<string>(
+    'Standard diagnostic inspection, item installation, and trade testing'
+  );
+  const [requirementType, setRequirementType] = useState<string>('New Installation & Setup');
+  const [isEmergency, setIsEmergency] = useState<boolean>(false);
+
+  // Step 3: Items & Quantity (Job-Based Pricing)
+  // Default preselected quantities (e.g. 3 fans and 6 lights if Electrical)
+  const [quantities, setQuantities] = useState<Record<string, number>>({
+    'elec-fan': 3,
+    'elec-led': 6,
+    'plumb-tap': 2,
+    'plumb-flush': 1,
+    'carp-lock': 1,
+    'carp-hinge': 2,
+    'clean-kitchen': 1,
+    'clean-bath': 1,
+    'paint-primer': 1,
+    'tech-geyser': 1,
+    'gard-prune': 1,
+    'driv-day': 1,
+    'care-elder': 1,
+  });
+
+  // Step 4: Schedule (Strictly separate from pricing)
+  const [scheduledDate, setScheduledDate] = useState<string>('2026-09-24');
+  const [scheduledTime, setScheduledTime] = useState<string>('11:00 AM');
+
+  // Step 5: Address
   const [customerName, setCustomerName] = useState<string>(currentUser?.name || 'Citizen Customer');
   const [customerPhone, setCustomerPhone] = useState<string>(currentUser?.phone || '+91 98180 99887');
   const [addressLine, setAddressLine] = useState<string>('Flat 402, Sunshine Apartments, Sector 13, Rohini');
-  const [cityZone, setCityZone] = useState<string>('North Delhi');
-  const [scheduledDate, setScheduledDate] = useState<string>('2026-09-04');
-  const [scheduledTime, setScheduledTime] = useState<string>('11:00 AM');
-  const [isEmergency, setIsEmergency] = useState<boolean>(false);
+  const [cityZone, setCityZone] = useState<string>('North Delhi / Bahadurgarh NCR');
+  const [landmark, setLandmark] = useState<string>('Near City Park Metro');
 
-  // Selected Worker state (preselected or matched)
+  // Assigned Worker (Preselected or matched by fair workload allocation)
   const [chosenWorker, setChosenWorker] = useState<WorkerProfile | null>(bookingTargetWorker);
 
-  // Payment State
+  // Step 7: Confirm & Payment State
   const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'Card' | 'NetBanking'>('UPI');
   const [upiId, setUpiId] = useState<string>('citizen.customer@oksbi');
   const [cardNumber, setCardNumber] = useState<string>('4111 2222 3333 4567');
@@ -67,45 +161,64 @@ export const BookingModal: React.FC = () => {
   const [cardCvv, setCardCvv] = useState<string>('891');
   const [bankSelected, setBankSelected] = useState<string>('State Bank of India (SBI)');
   const [isProcessingPayment, setIsProcessingPayment] = useState<boolean>(false);
-
-  // Result Booking
   const [createdBookingId, setCreatedBookingId] = useState<string | null>(null);
 
-  if (!bookingTargetWorker && step === 1 && !chosenWorker) {
-    // If opened generally, pick first available or matching
-  }
+  // Available items for the selected category
+  const categoryItems = useMemo(() => {
+    return SERVICE_ITEMS_CATALOG.filter((item) => item.category === serviceCategory);
+  }, [serviceCategory]);
 
-  // Fair Work Distribution Ranking algorithm (Section 10)
-  // Factors: Skill match, Availability, Distance score, Experience, Workload inverse (workers with fewer recent jobs get prioritized), Rating
-  const eligibleWorkers = workers
-    .filter((w) => w.isVerified && w.skills.includes(serviceCategory))
-    .map((w) => {
-      // Score calculation: higher is better
-      // 1. Workload fairness: worker with 0 workload gets +30, 3 workload gets +10
-      const workloadScore = Math.max(0, 30 - w.currentWorkload * 7);
-      // 2. Rating score: 4.8 * 6 = 28.8
-      const ratingScore = w.rating * 6;
-      // 3. Experience score: cap at 20
-      const expScore = Math.min(20, w.experienceYears * 1.5);
-      // 4. Availability bonus
-      const availScore = w.isAvailable ? 20 : 0;
-      const totalFairScore = Math.round(workloadScore + ratingScore + expScore + availScore);
+  // Selected items with count > 0
+  const activeSelectedItems = useMemo(() => {
+    return categoryItems.filter((item) => (quantities[item.id] || 0) > 0);
+  }, [categoryItems, quantities]);
 
-      return {
-        worker: w,
-        fairScore: totalFairScore,
-        estimatedDistKm: (1.5 + Math.random() * 3).toFixed(1),
-      };
-    })
-    .sort((a, b) => b.fairScore - a.fairScore);
+  // Dynamic Price Calculations (STRICT JOB-BASED PRICING)
+  // ITEMS / QUANTITY + MATERIAL COST + LABOUR COST = TOTAL JOB COST
+  const { totalMaterialCost, totalLabourCost, totalJobCost } = useMemo(() => {
+    let mat = 0;
+    let lab = 0;
+    activeSelectedItems.forEach((item) => {
+      const q = quantities[item.id] || 0;
+      mat += item.materialCost * q;
+      lab += item.labourCost * q;
+    });
 
-  const activeWorker = chosenWorker || eligibleWorkers[0]?.worker || workers[0];
+    // If customer has 0 items chosen, default to base single task
+    if (activeSelectedItems.length === 0) {
+      const defaultItem = categoryItems[0];
+      if (defaultItem) {
+        mat = defaultItem.materialCost;
+        lab = defaultItem.labourCost;
+      } else {
+        mat = 500;
+        lab = 300;
+      }
+    }
 
-  // Two-Stage Pricing: Stage 1 = Advance Diagnostic & Dispatch Fee
-  const baseRate = activeWorker?.baseCharge || 249;
-  const initialWelfareFee = Math.round(baseRate * 0.08); // 8% to worker welfare fund
-  const gst = Math.round(baseRate * 0.02); // 2% GST
-  const initialAdvanceTotal = baseRate + initialWelfareFee + gst;
+    return {
+      totalMaterialCost: mat,
+      totalLabourCost: lab,
+      totalJobCost: mat + lab,
+    };
+  }, [activeSelectedItems, quantities, categoryItems]);
+
+  const updateQuantity = (itemId: string, delta: number) => {
+    setQuantities((prev) => {
+      const current = prev[itemId] || 0;
+      const next = Math.max(0, current + delta);
+      return { ...prev, [itemId]: next };
+    });
+  };
+
+  // Eligible workers for the trade
+  const eligibleWorkers = useMemo(() => {
+    return workers
+      .filter((w) => w.isVerified && w.skills.includes(serviceCategory))
+      .sort((a, b) => b.rating - a.rating);
+  }, [workers, serviceCategory]);
+
+  const activeWorker = chosenWorker || eligibleWorkers[0] || workers[0];
 
   // Worker Verification status computations
   const activeGovRecord = governmentVerifications.find((gv) => gv.workerId === activeWorker?.id);
@@ -160,38 +273,38 @@ export const BookingModal: React.FC = () => {
         scheduledTime,
         isEmergency,
         customerLocation: {
-          lat: 28.6942,
-          lng: 77.1315,
+          lat: 28.6924,
+          lng: 76.9249,
           address: addressLine,
           zone: cityZone,
-          city: 'New Delhi',
+          city: 'Bahadurgarh',
         },
-        distanceKm: parseFloat((2.1).toFixed(1)),
-        estimatedArrivalMinutes: isEmergency ? 15 : 45,
-        status: isEmergency ? 'Worker On The Way' : 'Accepted',
-        estimatedPrice: initialAdvanceTotal,
-        baseFeePaid: initialAdvanceTotal,
+        distanceKm: 1.4,
+        estimatedArrivalMinutes: isEmergency ? 15 : 35,
+        status: 'Accepted',
+        estimatedPrice: totalJobCost,
+        baseFeePaid: totalJobCost,
         payment: {
-          id: `pay-base-${Date.now()}`,
+          id: `pay-job-${Date.now()}`,
           bookingId: '',
-          amount: initialAdvanceTotal,
+          amount: totalJobCost,
           method: paymentMethod,
           status: 'Completed',
           upiId: paymentMethod === 'UPI' ? upiId : undefined,
           cardLast4: paymentMethod === 'Card' ? cardNumber.slice(-4) : undefined,
           bankName: paymentMethod === 'NetBanking' ? bankSelected : undefined,
-          transactionRef: `NPCI-COOP-BASE-${Date.now().toString().slice(-8)}`,
+          transactionRef: `NPCI-COOP-JOB-${Date.now().toString().slice(-8)}`,
           paidAt: new Date().toISOString(),
-          workerPayout: Math.round(baseRate * 0.9), // 90% direct to worker
-          cooperativeWelfareLevy: initialWelfareFee,
-          administrativeGST: gst,
+          workerPayout: totalLabourCost, // 100% labour direct to worker
+          cooperativeWelfareLevy: Math.round(totalLabourCost * 0.05),
+          administrativeGST: 0,
         },
       });
 
       setIsProcessingPayment(false);
       setCreatedBookingId(newBooking.id);
       setActiveTrackingBookingId(newBooking.id);
-      setStep(7); // Show Confirmation & Invoice
+      setStep(7); // Show Confirmation
     }, 1200);
   };
 
@@ -199,44 +312,52 @@ export const BookingModal: React.FC = () => {
     setBookingTargetWorker(null);
   };
 
+  const stepsList = [
+    { num: 1, label: 'Service' },
+    { num: 2, label: 'Requirements' },
+    { num: 3, label: 'Items & Quantity' },
+    { num: 4, label: 'Schedule' },
+    { num: 5, label: 'Address' },
+    { num: 6, label: 'Review' },
+    { num: 7, label: 'Confirm' },
+  ];
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-xs p-0 sm:p-4 overflow-y-auto">
-      <div className="bg-white w-full max-w-2xl rounded-t-2xl sm:rounded-3xl shadow-xl border border-neutral-200 overflow-hidden my-0 sm:my-6 flex flex-col max-h-[92vh] sm:max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-stretch sm:items-center justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4 overflow-y-auto">
+      <div className="bg-[#FAF8F5] w-full max-w-4xl rounded-none sm:rounded-3xl shadow-2xl border-0 sm:border border-[#D0D5DD] overflow-hidden my-0 sm:my-6 flex flex-col h-full sm:h-auto sm:max-h-[92vh]">
         {/* Header */}
-        <div className="px-4 sm:px-6 py-3.5 sm:py-4 bg-white border-b border-[#E4E7EC] flex items-center justify-between">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 bg-white border-b border-[#E4E7EC] flex items-center justify-between shrink-0">
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-sm sm:text-base font-bold text-[#17324D]">
-                {language === 'hi' ? 'सहकारी सेवा बुकिंग' : 'Cooperative Service Booking'}
+              <h2 className="text-base sm:text-lg font-black text-[#17324D] tracking-tight">
+                ShramSetu Booking
               </h2>
-              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-md bg-[#EDF7F2] text-[#167A5B] border border-[#C6E7D8]">
-                {t.common.step} {step} {t.common.of} 7
+              <span className="text-[11px] uppercase font-bold px-2 py-0.5 rounded-md bg-[#EDF7F2] text-[#167A5B] border border-[#C6E7D8]">
+                Step {step} of 7
               </span>
             </div>
-            <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
-              {language === 'hi'
-                ? 'पारदर्शी सेवा शुल्क • 90% प्रत्यक्ष कारीगर पारिश्रमिक'
-                : 'Transparent job pricing • 100% direct artisan remuneration'}
+            <p className="text-xs text-slate-500 mt-0.5 font-medium">
+              Transparent job-based pricing • 100% direct artisan remuneration
             </p>
           </div>
           <button
+            type="button"
             onClick={closeModal}
-            className="text-slate-400 hover:text-slate-900 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+            className="min-h-[44px] min-w-[44px] text-slate-400 hover:text-slate-900 p-2 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer flex items-center justify-center"
+            aria-label="Close modal"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Numbered Step Progress Bar */}
-        <div className="px-4 sm:px-6 py-2.5 bg-[#F7F8F6] border-b border-[#E4E7EC]">
-          {/* Mobile step progress summary */}
+        {/* 7-Step Numbered Progress Bar */}
+        <div className="px-4 sm:px-6 py-2.5 bg-white border-b border-[#E4E7EC] shrink-0">
+          {/* Mobile step progress summary: Step X of 7 */}
           <div className="sm:hidden flex items-center justify-between gap-3">
             <span className="text-xs font-bold text-[#17324D]">
-              Step {step} of 7: {[
-                'Service', 'Location', 'Schedule', 'Worker', 'Estimate', 'Payment', 'Confirmed'
-              ][step - 1]}
+              Step {step} of 7: {stepsList[step - 1]?.label}
             </span>
-            <div className="flex-1 max-w-[120px] bg-slate-200 h-1.5 rounded-full overflow-hidden">
+            <div className="flex-1 max-w-[140px] bg-slate-200 h-2 rounded-full overflow-hidden">
               <div
                 className="bg-[#17324D] h-full transition-all duration-300 rounded-full"
                 style={{ width: `${(step / 7) * 100}%` }}
@@ -244,651 +365,889 @@ export const BookingModal: React.FC = () => {
             </div>
           </div>
 
-          {/* Desktop/Tablet full numbered steps */}
-          <div className="hidden sm:flex items-center justify-between min-w-[500px] gap-2 overflow-x-auto">
-            {[
-              { num: 1, label: 'Service' },
-              { num: 2, label: 'Location' },
-              { num: 3, label: 'Schedule' },
-              { num: 4, label: 'Worker' },
-              { num: 5, label: 'Estimate' },
-              { num: 6, label: 'Payment' },
-              { num: 7, label: 'Confirmed' },
-            ].map((s, idx) => (
-              <div key={s.num} className="flex items-center gap-1.5 flex-1">
-                <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 transition-colors ${
+          {/* Desktop full numbered steps */}
+          <div className="hidden sm:flex items-center justify-between gap-2 overflow-x-auto">
+            {stepsList.map((s, idx) => (
+              <div key={s.num} className="flex items-center gap-1.5 flex-1 min-w-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Allow navigating backwards or to reviewed steps
+                    if (s.num < step) setStep(s.num);
+                  }}
+                  disabled={s.num > step}
+                  className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shrink-0 transition-colors ${
                     step === s.num
                       ? 'bg-[#17324D] text-white'
                       : step > s.num
-                      ? 'bg-[#EDF7F2] text-[#167A5B] border border-[#C6E7D8]'
-                      : 'bg-slate-200 text-slate-500'
+                      ? 'bg-[#EDF7F2] text-[#167A5B] border border-[#C6E7D8] cursor-pointer'
+                      : 'bg-slate-200 text-slate-500 cursor-not-allowed'
                   }`}
                 >
                   {step > s.num ? '✓' : s.num}
-                </div>
+                </button>
                 <span
-                  className={`text-[11px] font-medium truncate ${
-                    step === s.num ? 'text-[#17324D] font-bold' : 'text-slate-500'
+                  className={`text-[11px] truncate ${
+                    step === s.num ? 'text-[#17324D] font-black' : 'text-slate-500 font-medium'
                   }`}
                 >
                   {s.label}
                 </span>
-                {idx < 6 && <div className="h-px bg-slate-300 flex-1 min-w-[8px]" />}
+                {idx < 6 && <div className="h-px bg-slate-200 flex-1 min-w-[6px]" />}
               </div>
             ))}
           </div>
         </div>
 
-        {/* Form Body */}
-        <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-4 sm:space-y-5">
-          {/* STEP 1: SERVICE DETAILS */}
-          {step === 1 && (
-            <div className="space-y-4">
-              <h3 className="text-sm font-bold text-slate-900">
-                {language === 'hi' ? '1. आवंटित कार्य श्रेणी व समस्या विवरण' : '1. Assigned Trade Role & Problem Details'}
-              </h3>
+        {/* Modal Main Area: Left Form Content + Right Sticky Summary Panel */}
+        <div className="flex-1 overflow-y-auto grid grid-cols-1 lg:grid-cols-12">
+          {/* Main Form Content (Left 7 or 8 Cols) */}
+          <div className="lg:col-span-8 p-5 sm:p-7 space-y-6">
+            {/* STEP 1: SERVICE SELECTION */}
+            {step === 1 && (
+              <div className="space-y-5 animate-in fade-in duration-200">
+                <div>
+                  <h3 className="text-base font-black text-[#17324D]">1. Select Cooperative Trade Service</h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Choose the skill category required. Tariffs are fixed upfront by registered trade guilds.
+                  </p>
+                </div>
 
-              <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1.5">
-                  {language === 'hi' ? 'कारीगर व्यवसाय व विशेषज्ञता' : 'Worker Trade & Specialization'}
-                </label>
-                <div className="flex items-center gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold shrink-0 border border-emerald-200">
-                    <ShieldCheck className="w-5 h-5 text-emerald-600" />
-                  </div>
-                  <div>
-                    <div className="text-[11px] text-slate-500 font-medium">
-                      {language === 'hi' ? 'आवंटित व्यावसायिक भूमिका' : 'Assigned Professional Role'}
-                    </div>
-                    <div className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                      <span>{t.roles.worker} – {t.categories[activeWorker.primaryTrade as ServiceCategory] || activeWorker.primaryTrade}</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold border border-emerald-200">
-                        {language === 'hi' ? 'समर्पित विशेषज्ञ' : 'Dedicated Specialist'}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {[
+                    { cat: 'Electrical', title: 'Electrical', icon: Zap },
+                    { cat: 'Plumbing', title: 'Plumbing', icon: Droplets },
+                    { cat: 'Carpentry', title: 'Carpentry', icon: Hammer },
+                    { cat: 'Cleaning', title: 'Cleaning', icon: Sparkles },
+                    { cat: 'Painting', title: 'Painting', icon: Paintbrush },
+                    { cat: 'Technician', title: 'Appliance Repair', icon: Tv },
+                    { cat: 'Gardening', title: 'Gardening', icon: Layers },
+                    { cat: 'Driving', title: 'Driving', icon: Navigation },
+                    { cat: 'Domestic Help', title: 'Caregiving', icon: ShieldCheck },
+                  ].map((item) => {
+                    const isSelected = serviceCategory === item.cat;
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        key={item.cat}
+                        type="button"
+                        onClick={() => setServiceCategory(item.cat as ServiceCategory)}
+                        className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-3 ${
+                          isSelected
+                            ? 'bg-white border-[#17324D] ring-2 ring-[#17324D] shadow-sm'
+                            : 'bg-white border-[#E2DFD8] hover:border-slate-400 hover:bg-[#FAF8F5]'
+                        }`}
+                      >
+                        <div
+                          className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+                            isSelected ? 'bg-[#17324D] text-white' : 'bg-[#EDF7F2] text-[#167A5B]'
+                          }`}
+                        >
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="font-bold text-xs text-[#17324D]">{item.title}</div>
+                          <div className="text-[10px] text-slate-500 mt-0.5">Itemized tariffs</div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Preselected or recommended worker badge */}
+                <div className="p-4 rounded-xl bg-white border border-[#E2DFD8] flex items-center gap-3.5">
+                  <img
+                    src={activeWorker.photoUrl}
+                    alt={activeWorker.name}
+                    className="w-12 h-12 rounded-xl object-cover border border-[#E2DFD8] shrink-0"
+                  />
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-xs text-[#17324D]">{activeWorker.name}</span>
+                      <span className="text-[10px] font-bold text-[#167A5B] bg-[#EDF7F2] px-2 py-0.5 rounded border border-[#C6E7D8]">
+                        ✓ Verified Artisan
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
-                      {language === 'hi'
-                        ? `यह कारीगर विशेष रूप से ${t.categories[activeWorker.primaryTrade as ServiceCategory] || activeWorker.primaryTrade} में सत्यापित और प्रमाणित हैं।`
-                        : `This craftsman is verified and certified specifically in ${activeWorker.primaryTrade}.`}
-                    </p>
+                    <div className="text-xs text-slate-500 mt-0.5">
+                      {activeWorker.primaryTrade} &bull; {activeWorker.cooperativeName} &bull; {activeWorker.completedJobsCount} jobs
+                    </div>
                   </div>
                 </div>
               </div>
+            )}
 
-              <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1.5">
-                  {language === 'hi' ? 'समस्या का विवरण / लक्षण' : 'Service Description / Symptoms'}
-                </label>
-                <textarea
-                  rows={3}
-                  value={serviceDescription}
-                  onChange={(e) => setServiceDescription(e.target.value)}
-                  placeholder={
-                    language === 'hi'
-                      ? 'मरम्मत या सेवा की आवश्यकता का विवरण लिखें (उदा. एमसीबी ट्रिप, नल से पानी टपकना, पंखा लगाना)...'
-                      : 'Describe what needs repair or attention (e.g., circuit breaker tripping, water tap leaking, fan installation)...'
-                  }
-                  className="w-full p-3 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-blue-800"
-                />
-              </div>
-
-              <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-xl border border-blue-200">
-                <ShieldCheck className="w-5 h-5 text-blue-700 shrink-0" />
-                <div className="text-xs text-blue-900">
-                  <span className="font-bold">{language === 'hi' ? 'सहकारी मानक: ' : 'Cooperative Standard: '}</span>
-                  {language === 'hi'
-                    ? 'सभी कार्य राष्ट्रीय सुरक्षा मानकों का पालन करने वाले सत्यापित कारीगरों द्वारा किए जाते हैं।'
-                    : 'All tasks are performed by verified craftsmen adhering to national safety protocols.'}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* STEP 2: LOCATION & ADDRESS */}
-          {step === 2 && (
-            <div className="space-y-4">
-              <h3 className="text-sm font-bold text-slate-900">
-                {language === 'hi' ? '2. ग्राहक का पता व सेवा स्थान' : '2. Customer Address & Service Location'}
-              </h3>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* STEP 2: REQUIREMENTS */}
+            {step === 2 && (
+              <div className="space-y-5 animate-in fade-in duration-200">
                 <div>
-                  <label className="text-xs font-semibold text-slate-700 block mb-1">
-                    {language === 'hi' ? 'ग्राहक का पूरा नाम' : 'Customer Full Name'}
+                  <h3 className="text-base font-black text-[#17324D]">2. Define Work Requirements</h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Describe what needs fixing or installation so the artisan arrives with correct tools.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-2">Scope of Requirement</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {[
+                      'New Installation & Setup',
+                      'Repair & Fault Fix',
+                      'Replacement of Broken Fixture',
+                      'Preventive Maintenance',
+                    ].map((req) => (
+                      <button
+                        key={req}
+                        type="button"
+                        onClick={() => setRequirementType(req)}
+                        className={`p-3 rounded-xl border text-xs font-bold text-left transition-all cursor-pointer flex items-center justify-between ${
+                          requirementType === req
+                            ? 'bg-white border-[#17324D] text-[#17324D] shadow-xs ring-1 ring-[#17324D]'
+                            : 'bg-white border-[#E2DFD8] text-slate-700 hover:bg-[#FAF8F5]'
+                        }`}
+                      >
+                        <span>{req}</span>
+                        {requirementType === req && <Check className="w-4 h-4 text-[#167A5B]" />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1.5">
+                    Specific Problem Details / Notes for Artisan
                   </label>
-                  <input
-                    type="text"
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    className="w-full p-2.5 rounded-lg border border-slate-300 text-xs"
+                  <textarea
+                    rows={3}
+                    value={serviceDescription}
+                    onChange={(e) => setServiceDescription(e.target.value)}
+                    placeholder="e.g. 3 ceiling fans to be installed on 10ft ceiling, 6 LED ceiling lights wired..."
+                    className="w-full px-3.5 py-2.5 bg-white border border-[#D0D5DD] rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-[#17324D]"
                   />
                 </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 block mb-1">
-                    {language === 'hi' ? 'मोबाइल नंबर' : 'Mobile Number'}
-                  </label>
-                  <input
-                    type="text"
-                    value={customerPhone}
-                    onChange={(e) => setCustomerPhone(e.target.value)}
-                    className="w-full p-2.5 rounded-lg border border-slate-300 text-xs"
-                  />
-                </div>
-              </div>
 
-              <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">
-                  {language === 'hi' ? 'परिसर का पता (मकान/फ्लैट, लैंडमार्क)' : 'Premises Address (House/Flat, Landmark)'}
-                </label>
-                <input
-                  type="text"
-                  value={addressLine}
-                  onChange={(e) => setAddressLine(e.target.value)}
-                  className="w-full p-2.5 rounded-lg border border-slate-300 text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">
-                  {language === 'hi' ? 'शहर / प्रशासनिक वार्ड ज़ोन' : 'City / Administrative Ward Zone'}
-                </label>
-                <select
-                  value={cityZone}
-                  onChange={(e) => setCityZone(e.target.value)}
-                  className="w-full p-2.5 rounded-lg border border-slate-300 text-xs font-medium"
-                >
-                  <option value="North Delhi">{language === 'hi' ? 'उत्तरी दिल्ली (रोहिणी, पीतमपुरा, मॉडल टाउन)' : 'North Delhi (Rohini, Pitampura, Model Town)'}</option>
-                  <option value="South Delhi">{language === 'hi' ? 'दक्षिणी दिल्ली (साकेत, हौज खास, लाजपत नगर)' : 'South Delhi (Saket, Hauz Khas, Lajpat Nagar)'}</option>
-                  <option value="West Delhi">{language === 'hi' ? 'पश्चिमी दिल्ली (जनकपुरी, द्वारका, विकास पुरी)' : 'West Delhi (Janakpuri, Dwarka, Vikas Puri)'}</option>
-                  <option value="East Delhi">{language === 'hi' ? 'पूर्वी दिल्ली (मयूर विहार, लक्ष्मी नगर)' : 'East Delhi (Mayur Vihar, Laxmi Nagar)'}</option>
-                  <option value="Mohali & Chandigarh">{language === 'hi' ? 'मोहाली व चंडीगढ़ ट्राइसिटी' : 'Mohali & Chandigarh Tricity'}</option>
-                  <option value="Central Gurugram">{language === 'hi' ? 'गुरुग्राम (डीएलएफ, सेक्टर 14-31)' : 'Gurugram (DLF, Sector 14-31)'}</option>
-                </select>
-              </div>
-            </div>
-          )}
-
-          {/* STEP 3: DATE & TIME */}
-          {step === 3 && (
-            <div className="space-y-4">
-              <h3 className="text-sm font-bold text-slate-900">
-                {language === 'hi' ? '3. दिनांक व समय स्लॉट चुनें' : '3. Select Date & Slot Schedule'}
-              </h3>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 block mb-1">
-                    {language === 'hi' ? 'पसंदीदा दिनांक' : 'Preferred Date'}
-                  </label>
-                  <input
-                    type="date"
-                    value={scheduledDate}
-                    onChange={(e) => setScheduledDate(e.target.value)}
-                    className="w-full p-2.5 rounded-lg border border-slate-300 text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 block mb-1">
-                    {language === 'hi' ? 'आगमन समय स्लॉट' : 'Arrival Time Slot'}
-                  </label>
-                  <select
-                    value={scheduledTime}
-                    onChange={(e) => setScheduledTime(e.target.value)}
-                    className="w-full p-2.5 rounded-lg border border-slate-300 text-xs font-medium"
-                  >
-                    <option value="09:00 AM">09:00 AM - 10:30 AM</option>
-                    <option value="11:00 AM">11:00 AM - 12:30 PM</option>
-                    <option value="02:00 PM">02:00 PM - 03:30 PM</option>
-                    <option value="04:30 PM">04:30 PM - 06:00 PM</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="p-3 bg-amber-50 rounded-xl border border-amber-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Zap className="w-4 h-4 text-red-600" />
-                    <span className="text-xs font-bold text-amber-900">
-                      {language === 'hi' ? 'क्या तुरंत आपातकालीन सेवा चाहिए?' : 'Need Immediate Emergency Dispatch?'}
-                    </span>
+                <div className="p-4 rounded-xl bg-white border border-[#E2DFD8] flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <div className="text-xs font-bold text-[#17324D] flex items-center gap-1.5">
+                      <span>Emergency Rapid Dispatch</span>
+                    </div>
+                    <div className="text-[11px] text-slate-500">
+                      Mobilize the nearest artisan within 15–20 minutes with zero surge pricing.
+                    </div>
                   </div>
                   <input
                     type="checkbox"
                     checked={isEmergency}
                     onChange={(e) => setIsEmergency(e.target.checked)}
-                    className="w-4 h-4 text-red-600 rounded cursor-pointer"
+                    className="w-4 h-4 text-[#17324D] rounded cursor-pointer"
                   />
                 </div>
-                <p className="text-[11px] text-amber-800 mt-1">
-                  {language === 'hi'
-                    ? 'निकटतम उपलब्ध कारीगर को 15-25 मिनट में प्राथमिकता एसओएस ट्रैकिंग के साथ भेजा जाता है।'
-                    : 'Dispatches the closest standby worker within 15-25 minutes with priority SOS tracking.'}
-                </p>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* STEP 4: FAIR WORKER MATCHING & SELECTION */}
-          {step === 4 && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
+            {/* STEP 3: ITEMS & QUANTITY (STRICT JOB-BASED PRICING) */}
+            {step === 3 && (
+              <div className="space-y-5 animate-in fade-in duration-200">
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900">
-                    {language === 'hi' ? '4. सहकारी सदस्य कारीगर का चयन' : '4. Select Cooperative Member Worker'}
-                  </h3>
-                  <p className="text-[11px] text-slate-500">
-                    {language === 'hi'
-                      ? 'समान कार्य वितरण और जीपीएस दूरी के आधार पर क्रमित'
-                      : 'Ranked by Fair Work Distribution & Geospatial proximity'}
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-black text-[#17324D]">3. Select Items &amp; Quantity</h3>
+                    <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-[#EDF7F2] text-[#167A5B] border border-[#C6E7D8]">
+                      Job-Based Pricing
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Select exact items required. Material and labour costs update dynamically with zero hidden rates.
                   </p>
                 </div>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
-                  {language === 'hi' ? 'न्यायसंगत आवंटन' : 'Fair Share Match'}
-                </span>
-              </div>
 
-              <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
-                {eligibleWorkers.map(({ worker, fairScore, estimatedDistKm }) => {
-                  const isSelected = activeWorker.id === worker.id;
-                  return (
-                    <div
-                      key={worker.id}
-                      onClick={() => setChosenWorker(worker)}
-                      className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
-                        isSelected
-                          ? 'border-emerald-600 bg-emerald-50/60 ring-2 ring-emerald-500'
-                          : 'border-slate-200 hover:border-slate-300 bg-white'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <TradeBadgeAvatar
-                          trade={worker.primaryTrade}
-                          name={worker.name}
-                          size="sm"
-                          photoUrl={worker.photoUrl}
-                        />
+                {/* STRICT FORMULA CALLOUT */}
+                <div className="p-3.5 rounded-xl bg-white border border-[#E2DFD8] text-xs space-y-1">
+                  <div className="font-bold text-[#17324D] flex items-center gap-1.5">
+                    <Layers className="w-4 h-4 text-[#167A5B]" />
+                    <span>Transparent Pricing Formula:</span>
+                  </div>
+                  <div className="font-mono text-[11px] text-slate-700 bg-[#FAF8F5] p-2 rounded-lg border border-[#EBE8E1]">
+                    ITEMS / QUANTITY + MATERIAL COST + LABOUR COST = TOTAL JOB COST
+                  </div>
+                </div>
+
+                {/* Clear Job Pricing Breakdown Summary */}
+                <div className="p-4 rounded-2xl bg-white border border-[#17324D]/20 shadow-xs space-y-3">
+                  <div className="text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-100 pb-2 flex items-center justify-between">
+                    <span>Required Items</span>
+                    <span className="text-[10px] text-[#167A5B] font-bold">Itemized Scope</span>
+                  </div>
+                  
+                  <div className="space-y-1.5 text-xs">
+                    {categoryItems.filter(it => (quantities[it.id] || 0) > 0).map(it => (
+                      <div key={it.id} className="flex items-center justify-between text-slate-800 font-semibold">
+                        <span>{quantities[it.id]} {it.name}{quantities[it.id] > 1 && !it.name.endsWith('s') ? 's' : ''}</span>
+                        <span className="text-slate-500 font-normal">Mat ₹{it.materialCost * quantities[it.id]} + Lab ₹{it.labourCost * quantities[it.id]}</span>
+                      </div>
+                    ))}
+                    {categoryItems.filter(it => (quantities[it.id] || 0) > 0).length === 0 && (
+                      <div className="text-slate-400 text-xs italic">No items selected yet. Tap [+] below to add items.</div>
+                    )}
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-100 space-y-1 text-xs">
+                    <div className="flex items-center justify-between text-slate-600">
+                      <span>Material</span>
+                      <span className="font-bold text-slate-900">₹{totalMaterialCost.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-slate-600">
+                      <span>Labour</span>
+                      <span className="font-bold text-slate-900">₹{totalLabourCost.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="flex items-center justify-between pt-2 border-t border-dashed border-slate-200 text-sm">
+                      <span className="font-black text-[#17324D]">TOTAL</span>
+                      <span className="text-lg sm:text-xl font-black text-[#17324D]">₹{totalJobCost.toLocaleString('en-IN')}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Itemized Catalogue Stepper List */}
+                <div className="space-y-3">
+                  {categoryItems.map((item) => {
+                    const qty = quantities[item.id] || 0;
+                    const itemMat = item.materialCost * qty;
+                    const itemLab = item.labourCost * qty;
+                    return (
+                      <div
+                        key={item.id}
+                        className={`p-4 rounded-xl border bg-white transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                          qty > 0 ? 'border-[#17324D] shadow-xs' : 'border-[#E2DFD8]'
+                        }`}
+                      >
                         <div>
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-xs font-bold text-slate-900">{worker.name}</span>
-                            <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded">
-                              ✓ {language === 'hi' ? 'सत्यापित' : 'Verified'}
-                            </span>
+                          <div className="font-bold text-xs text-[#17324D]">{item.name}</div>
+                          <div className="text-[11px] text-slate-500 mt-0.5 flex items-center gap-2">
+                            <span>Material: ₹{item.materialCost}</span>
+                            <span>&bull;</span>
+                            <span>Labour: ₹{item.labourCost}</span>
+                            <span>per {item.unit}</span>
                           </div>
-                          <div className="text-[11px] text-slate-500 mt-0.5">
-                            {worker.cooperativeName.slice(0, 35)}...
-                          </div>
-                          <div className="flex items-center gap-3 text-[11px] text-slate-600 mt-1">
-                            <span className="flex items-center gap-0.5 text-amber-600 font-bold">
-                              <Star className="w-3 h-3 fill-amber-400" /> {worker.rating}
-                            </span>
-                            <span>{worker.completedJobsCount} {t.directory.jobsSuffix}</span>
-                            <span>~{estimatedDistKm} {language === 'hi' ? 'किमी दूर' : 'km away'}</span>
-                          </div>
+                          {qty > 0 && (
+                            <div className="text-[11px] font-semibold text-[#167A5B] mt-1">
+                              Subtotal: ₹{itemMat + itemLab} (Mat ₹{itemMat} + Lab ₹{itemLab})
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Touch-First Quantity Stepper */}
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => updateQuantity(item.id, -1)}
+                            className="min-h-[44px] min-w-[44px] rounded-xl border border-[#D0D5DD] bg-[#FAF8F5] hover:bg-slate-100 flex items-center justify-center text-slate-700 font-bold transition-colors cursor-pointer"
+                            aria-label={`Decrease ${item.name}`}
+                          >
+                            <Minus className="w-4 h-4" />
+                          </button>
+                          <span className="w-10 text-center font-bold text-sm text-slate-900 font-mono">
+                            {qty}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => updateQuantity(item.id, 1)}
+                            className="min-h-[44px] min-w-[44px] rounded-xl border border-[#17324D] bg-[#17324D] hover:bg-[#112437] flex items-center justify-center text-white font-bold transition-colors cursor-pointer"
+                            aria-label={`Increase ${item.name}`}
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
-
-                      <div className="text-right">
-                        <div className="text-xs font-bold text-blue-900">₹{worker.baseCharge}</div>
-                        <div className="text-[10px] text-slate-400">{language === 'hi' ? 'अनुमानित शुल्क' : 'Est. job fee'}</div>
-                        <div className="mt-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">
-                          {language === 'hi' ? 'न्यायसंगत स्कोर:' : 'Fair Score:'} {fairScore}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* STEP 5: ADVANCE DIAGNOSTIC FEE BREAKDOWN */}
-          {step === 5 && (
-            <div className="space-y-4">
-              <h3 className="text-sm font-bold text-slate-900">
-                {language === 'hi' ? '5. अग्रिम तकनीकी जांच व प्रस्थान शुल्क (चरण 1)' : '5. Advance Diagnostic & Dispatch Fee (Stage 1)'}
-              </h3>
-
-              {/* Worker Verification Section */}
-              <div className="p-4 rounded-2xl bg-white border border-neutral-200 shadow-2xs space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-bold text-neutral-900 flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                    Worker Verification
-                  </h4>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-800 border border-neutral-200">
-                    {activeWorker.name}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
-                  {/* Government Verification */}
-                  <div className="p-3 rounded-xl bg-neutral-50 border border-neutral-200/80">
-                    <div className="text-[11px] font-medium text-neutral-500">Government Verification</div>
-                    <div className={`text-xs font-bold mt-1 flex items-center gap-1 ${isActiveGovVerified ? 'text-emerald-700' : 'text-amber-700'}`}>
-                      {govStatusText}
-                    </div>
-                  </div>
-
-                  {/* Cooperative Verification */}
-                  <div className="p-3 rounded-xl bg-neutral-50 border border-neutral-200/80">
-                    <div className="text-[11px] font-medium text-neutral-500">Cooperative Verification</div>
-                    <div className={`text-xs font-bold mt-1 flex items-center gap-1 ${isActiveCoopVerified ? 'text-emerald-700' : 'text-amber-700'}`}>
-                      {coopStatusText}
-                    </div>
-                  </div>
-
-                  {/* ShramSetu Verification */}
-                  <div className="p-3 rounded-xl bg-neutral-50 border border-neutral-200/80">
-                    <div className="text-[11px] font-medium text-neutral-500">ShramSetu Verification</div>
-                    <div className={`text-xs font-bold mt-1 flex items-center gap-1 ${isActivePlatformVerified ? 'text-emerald-700' : 'text-amber-700'}`}>
-                      {platformStatusText}
-                    </div>
-                  </div>
+                    );
+                  })}
                 </div>
               </div>
+            )}
 
-              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3 text-xs">
-                <div className="flex justify-between text-slate-700">
-                  <span>{language === 'hi' ? 'ऑन-साइट निरीक्षण व सेवा शुल्क:' : 'On-Site Inspection & Service Fee:'}</span>
-                  <span className="font-semibold text-slate-900">₹{baseRate}</span>
+            {/* STEP 4: SCHEDULE */}
+            {step === 4 && (
+              <div className="space-y-5 animate-in fade-in duration-200">
+                <div>
+                  <h3 className="text-base font-black text-[#17324D]">4. Select Appointment Schedule</h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Pick your preferred date and arrival window. Appointment timing is strictly independent from service cost.
+                  </p>
                 </div>
-                <div className="flex justify-between text-emerald-800 font-medium">
-                  <span>{language === 'hi' ? 'सहकारी कामगार कल्याण कोष (8%):' : 'Cooperative Worker Welfare Pool (8%):'}</span>
-                  <span>₹{initialWelfareFee}</span>
+
+                <div className="p-3 rounded-xl bg-white border border-[#E2DFD8] text-xs text-slate-600 flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-[#167A5B] shrink-0" />
+                  <span>Fair dispatch rule: Timing window never alters fixed job tariffs.</span>
                 </div>
-                <div className="flex justify-between text-slate-500">
-                  <span>{language === 'hi' ? 'सांविधिक प्रशासनिक व जीएसटी (2%):' : 'Statutory GST / Administrative (2%):'}</span>
-                  <span>₹{gst}</span>
-                </div>
-                <div className="pt-2 border-t border-slate-200 flex justify-between text-sm font-bold text-blue-950">
-                  <span>{language === 'hi' ? 'अभी देय प्रारंभिक अग्रिम:' : 'Initial Advance Payable Now:'}</span>
-                  <span className="text-base text-emerald-700">₹{initialAdvanceTotal}</span>
-                </div>
-              </div>
 
-              <div className="p-3.5 bg-blue-50 rounded-xl border border-blue-200 text-xs text-blue-900 space-y-1.5">
-                <div className="font-bold flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-blue-700 shrink-0" />
-                  <span>{language === 'hi' ? 'दो-चरणीय सहकारी भुगतान सुरक्षा:' : 'Two-Stage Cooperative Payment Protection:'}</span>
-                </div>
-                <p className="text-[11px] text-blue-800 leading-relaxed">
-                  {language === 'hi'
-                    ? `आप अभी केवल प्रारंभिक अग्रिम शुल्क का भुगतान करते हैं। जब ${activeWorker.name} मौके पर पहुंचेंगे और खराबी की जांच करेंगे, तो वे आपको सटीक समस्या बताएंगे। इसके बाद आप वेबसाइट पर चेकलिस्ट से पुष्टि करके अंतिम बिल का भुगतान करेंगे।`
-                    : `You only pay the initial base diagnostic fee now. Once ${activeWorker.name} arrives and diagnoses the issue on-site, they will tell you the exact fault. You will then select the diagnosed problem from a checklist on the website to finalize the transparent cooperative repair bill.`}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* STEP 6: DIGITAL PAYMENTS FOR ADVANCE */}
-          {step === 6 && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-slate-900">
-                  {language === 'hi' ? '6. अग्रिम जांच शुल्क का भुगतान करें' : '6. Pay Advance Diagnostic Fee'}
-                </h3>
-                <span className="text-xs font-bold text-emerald-700">
-                  ₹{initialAdvanceTotal} {language === 'hi' ? 'अग्रिम' : 'Advance'}
-                </span>
-              </div>
-
-              {/* Payment Method Selector */}
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod('UPI')}
-                  className={`p-3 rounded-xl border text-center transition-all cursor-pointer ${
-                    paymentMethod === 'UPI'
-                      ? 'border-emerald-600 bg-emerald-50 text-emerald-900 font-bold'
-                      : 'border-slate-200 text-slate-600'
-                  }`}
-                >
-                  <QrCode className="w-5 h-5 mx-auto mb-1 text-emerald-600" />
-                  <span className="text-xs block">UPI / QR</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod('Card')}
-                  className={`p-3 rounded-xl border text-center transition-all cursor-pointer ${
-                    paymentMethod === 'Card'
-                      ? 'border-emerald-600 bg-emerald-50 text-emerald-900 font-bold'
-                      : 'border-slate-200 text-slate-600'
-                  }`}
-                >
-                  <CreditCard className="w-5 h-5 mx-auto mb-1 text-blue-600" />
-                  <span className="text-xs block">{language === 'hi' ? 'रुपे / कार्ड' : 'RuPay / Cards'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod('NetBanking')}
-                  className={`p-3 rounded-xl border text-center transition-all cursor-pointer ${
-                    paymentMethod === 'NetBanking'
-                      ? 'border-emerald-600 bg-emerald-50 text-emerald-900 font-bold'
-                      : 'border-slate-200 text-slate-600'
-                  }`}
-                >
-                  <Building className="w-5 h-5 mx-auto mb-1 text-blue-900" />
-                  <span className="text-xs block">{language === 'hi' ? 'नेट बैंकिंग' : 'Net Banking'}</span>
-                </button>
-              </div>
-
-              {/* UPI Options */}
-              {paymentMethod === 'UPI' && (
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3 text-xs">
-                  <div>
-                    <label className="text-xs font-semibold text-slate-700 block mb-1">
-                      {language === 'hi' ? 'यूपीआई आईडी दर्ज करें' : 'Enter UPI VPA ID'}
-                    </label>
-                    <input
-                      type="text"
-                      value={upiId}
-                      onChange={(e) => setUpiId(e.target.value)}
-                      placeholder="username@okhdfcbank or @upi"
-                      className="w-full p-2.5 rounded-lg border border-slate-300 text-xs"
-                    />
-                  </div>
-                  <div className="text-[11px] text-slate-500">
-                    {language === 'hi'
-                      ? 'गूगल पे, फोनपे, पेटीएम, भीम यूपीआई और सभी बैंक ऐप्स समर्थित हैं।'
-                      : 'Supports Google Pay, PhonePe, Paytm, BHIM UPI and all Indian banking apps.'}
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-2">Service Date</label>
+                  <div className="grid grid-cols-3 gap-2.5">
+                    {[
+                      { label: 'Today', val: '2026-09-24' },
+                      { label: 'Tomorrow', val: '2026-09-25' },
+                      { label: 'Thu, 24 Sep', val: '2026-09-26' },
+                    ].map((d) => (
+                      <button
+                        key={d.val}
+                        type="button"
+                        onClick={() => setScheduledDate(d.val)}
+                        className={`min-h-[48px] py-2.5 px-2 rounded-xl border text-xs font-bold text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
+                          scheduledDate === d.val
+                            ? 'bg-[#17324D] border-[#17324D] text-white shadow-xs'
+                            : 'bg-white border-[#E2DFD8] text-slate-700 hover:bg-[#FAF8F5]'
+                        }`}
+                      >
+                        <div>{d.label}</div>
+                        <div className={`text-[10px] font-normal mt-0.5 ${scheduledDate === d.val ? 'text-slate-200' : 'text-slate-500'}`}>{d.val}</div>
+                      </button>
+                    ))}
                   </div>
                 </div>
-              )}
 
-              {/* Card Options */}
-              {paymentMethod === 'Card' && (
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3 text-xs">
-                  <div>
-                    <label className="text-xs font-semibold text-slate-700 block mb-1">
-                      {language === 'hi' ? 'कार्ड नंबर (RuPay, Visa, Master)' : 'Card Number (RuPay, Visa, Master)'}
-                    </label>
-                    <input
-                      type="text"
-                      maxLength={19}
-                      value={cardNumber}
-                      onChange={(e) => setCardNumber(e.target.value)}
-                      className="w-full p-2.5 rounded-lg border border-slate-300 text-xs font-mono"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="text-xs font-semibold text-slate-700 block mb-1">
-                        {language === 'hi' ? 'वैधता (MM/YY)' : 'Expiry (MM/YY)'}
-                      </label>
-                      <input
-                        type="text"
-                        maxLength={5}
-                        value={cardExpiry}
-                        onChange={(e) => setCardExpiry(e.target.value)}
-                        className="w-full p-2.5 rounded-lg border border-slate-300 text-xs font-mono"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold text-slate-700 block mb-1">CVV</label>
-                      <input
-                        type="password"
-                        maxLength={3}
-                        value={cardCvv}
-                        onChange={(e) => setCardCvv(e.target.value)}
-                        className="w-full p-2.5 rounded-lg border border-slate-300 text-xs font-mono"
-                      />
-                    </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-2">Arrival Time Slot</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                    {[
+                      '10:00 AM - 11:30 AM',
+                      '11:30 AM - 01:00 PM',
+                      '02:00 PM - 03:30 PM',
+                      '03:30 PM - 05:00 PM',
+                      '05:00 PM - 06:30 PM',
+                      '06:30 PM - 08:00 PM',
+                    ].map((slot) => (
+                      <button
+                        key={slot}
+                        type="button"
+                        onClick={() => setScheduledTime(slot)}
+                        className={`min-h-[48px] p-2.5 rounded-xl border text-xs font-bold text-center transition-all cursor-pointer flex items-center justify-center ${
+                          scheduledTime === slot
+                            ? 'bg-[#17324D] border-[#17324D] text-white shadow-xs'
+                            : 'bg-white border-[#E2DFD8] text-slate-700 hover:bg-[#FAF8F5]'
+                        }`}
+                      >
+                        {slot}
+                      </button>
+                    ))}
                   </div>
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* NetBanking Options */}
-              {paymentMethod === 'NetBanking' && (
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3 text-xs">
-                  <label className="text-xs font-semibold text-slate-700 block mb-1">
-                    {language === 'hi' ? 'बैंक चुनें' : 'Select Bank'}
-                  </label>
-                  <select
-                    value={bankSelected}
-                    onChange={(e) => setBankSelected(e.target.value)}
-                    className="w-full p-2.5 rounded-lg border border-slate-300 text-xs font-medium"
+            {/* STEP 5: ADDRESS */}
+            {step === 5 && (
+              <div className="space-y-5 animate-in fade-in duration-200">
+                <div>
+                  <h3 className="text-base font-black text-[#17324D]">5. Service Location &amp; Contact</h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Provide precise doorstep details for verified cooperative dispatch.
+                  </p>
+                </div>
+
+                {/* Saved Addresses quick chips */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-700 block">Saved Addresses</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { label: 'Home', addr: 'Flat 402, Sunshine Apartments, Sector 13, Rohini', zone: 'North Delhi / Bahadurgarh NCR', lmk: 'Near City Park Metro' },
+                      { label: 'Work', addr: 'Cooperative Technology Hub, Sector 14, Bahadurgarh', zone: 'Bahadurgarh Central', lmk: 'Near Metro Pillar 842' },
+                      { label: 'Other', addr: 'Plot 12, Line Par, Bahadurgarh', zone: 'Bahadurgarh Industrial Zone', lmk: 'Opposite Water Tank' },
+                    ].map((saved) => (
+                      <button
+                        key={saved.label}
+                        type="button"
+                        onClick={() => {
+                          setAddressLine(saved.addr);
+                          setCityZone(saved.zone);
+                          setLandmark(saved.lmk);
+                        }}
+                        className={`min-h-[44px] p-2 rounded-xl border text-xs font-bold text-center transition-all cursor-pointer ${
+                          addressLine === saved.addr
+                            ? 'bg-[#17324D] text-white border-[#17324D] shadow-xs'
+                            : 'bg-white border-[#E2DFD8] text-slate-700 hover:bg-[#FAF8F5]'
+                        }`}
+                      >
+                        {saved.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Use current location button */}
+                <div className="space-y-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAddressLine('Current Location • Sector 6, Bahadurgarh, Haryana');
+                      setCityZone('Bahadurgarh Cluster');
+                      setLandmark('Verified GPS coordinates');
+                    }}
+                    className="w-full min-h-[44px] py-2.5 px-3 rounded-xl border border-[#167A5B]/30 bg-[#EDF7F2] text-[#167A5B] text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
                   >
-                    <option value="State Bank of India (SBI)">State Bank of India (SBI)</option>
-                    <option value="Punjab National Bank (PNB)">Punjab National Bank (PNB)</option>
-                    <option value="HDFC Bank">HDFC Bank</option>
-                    <option value="ICICI Bank">ICICI Bank</option>
-                    <option value="Delhi State Co-operative Bank">Delhi State Co-operative Bank</option>
-                  </select>
+                    <MapPin className="w-4 h-4 text-[#167A5B]" />
+                    <span>Use current location</span>
+                  </button>
+                  <p className="text-[11px] text-slate-500">
+                    Location permission is used strictly to calculate proximity to registered trade cooperatives. Your address is never sold or shared.
+                  </p>
                 </div>
-              )}
-            </div>
-          )}
 
-          {/* STEP 7: CONFIRMED & INVOICE RECEIPT */}
-          {step === 7 && (
-            <div className="text-center py-6 space-y-4">
-              <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto shadow-inner">
-                <CheckCircle2 className="w-10 h-10" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2 border-t border-slate-100">
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Customer Full Name</label>
+                    <input
+                      type="text"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      className="w-full min-h-[44px] px-3.5 py-2 bg-white border border-[#D0D5DD] rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-[#17324D]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Mobile Contact (for OTP)</label>
+                    <input
+                      type="text"
+                      value={customerPhone}
+                      onChange={(e) => setCustomerPhone(e.target.value)}
+                      className="w-full min-h-[44px] px-3.5 py-2 bg-white border border-[#D0D5DD] rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-[#17324D]"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Complete Address Line</label>
+                  <input
+                    type="text"
+                    value={addressLine}
+                    onChange={(e) => setAddressLine(e.target.value)}
+                    className="w-full min-h-[44px] px-3.5 py-2 bg-white border border-[#D0D5DD] rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-[#17324D]"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Service Cluster / Zone</label>
+                    <input
+                      type="text"
+                      value={cityZone}
+                      onChange={(e) => setCityZone(e.target.value)}
+                      className="w-full min-h-[44px] px-3.5 py-2 bg-white border border-[#D0D5DD] rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-[#17324D]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Nearest Landmark</label>
+                    <input
+                      type="text"
+                      value={landmark}
+                      onChange={(e) => setLandmark(e.target.value)}
+                      className="w-full min-h-[44px] px-3.5 py-2 bg-white border border-[#D0D5DD] rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-[#17324D]"
+                    />
+                  </div>
+                </div>
               </div>
-              <div>
-                <h3 className="text-xl font-bold text-slate-900">
-                  {language === 'hi' ? 'अग्रिम भुगतान सफल व कारीगर रवाना!' : 'Advance Paid & Craftsman Dispatched!'}
-                </h3>
-                <p className="text-xs text-slate-600 mt-1">
-                  {language === 'hi'
-                    ? `कारीगर ${activeWorker.name} ने आपका अनुरोध स्वीकार कर लिया है।`
-                    : `Worker ${activeWorker.name} has accepted your request.`}
-                </p>
+            )}
+
+            {/* STEP 6: REVIEW */}
+            {step === 6 && (
+              <div className="space-y-5 animate-in fade-in duration-200">
+                <div>
+                  <h3 className="text-base font-black text-[#17324D]">6. Review Booking &amp; Tariffs</h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Carefully inspect the verified credentials and itemized tariff breakdown before payment.
+                  </p>
+                </div>
+
+                {/* 3-Tier Verification Status Card */}
+                <div className="p-4 rounded-xl bg-white border border-[#E2DFD8] space-y-3">
+                  <div className="text-xs font-bold text-[#17324D] uppercase tracking-wider flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-[#167A5B]" />
+                    <span>Assigned Professional Verification Status</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                    {/* Tier 1: Government Verification */}
+                    <div className="p-2.5 rounded-lg bg-[#FAF8F5] border border-[#E2DFD8]">
+                      <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                        Government Verification
+                      </div>
+                      <div className="font-black text-slate-900 mt-1 flex items-center gap-1">
+                        <span className={`w-2 h-2 rounded-full ${isActiveGovVerified ? 'bg-[#167A5B]' : 'bg-slate-400'}`} />
+                        <span>{govStatusText}</span>
+                      </div>
+                    </div>
+
+                    {/* Tier 2: Cooperative Verification */}
+                    <div className="p-2.5 rounded-lg bg-[#FAF8F5] border border-[#E2DFD8]">
+                      <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                        Cooperative Verification
+                      </div>
+                      <div className="font-black text-slate-900 mt-1 flex items-center gap-1">
+                        <span className={`w-2 h-2 rounded-full ${isActiveCoopVerified ? 'bg-[#167A5B]' : 'bg-slate-400'}`} />
+                        <span>{coopStatusText}</span>
+                      </div>
+                    </div>
+
+                    {/* Tier 3: ShramSetu Verification */}
+                    <div className="p-2.5 rounded-lg bg-[#FAF8F5] border border-[#E2DFD8]">
+                      <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                        ShramSetu Verification
+                      </div>
+                      <div className="font-black text-slate-900 mt-1 flex items-center gap-1">
+                        <span className={`w-2 h-2 rounded-full ${isActivePlatformVerified ? 'bg-[#167A5B]' : 'bg-slate-400'}`} />
+                        <span>{platformStatusText}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Itemized Breakdown Table */}
+                <div className="p-4 rounded-xl bg-white border border-[#E2DFD8] space-y-3">
+                  <div className="font-bold text-xs text-[#17324D] uppercase tracking-wider">
+                    Itemized Cost Breakdown
+                  </div>
+
+                  <div className="divide-y divide-slate-100 text-xs">
+                    {activeSelectedItems.map((item) => {
+                      const qty = quantities[item.id] || 1;
+                      const mat = item.materialCost * qty;
+                      const lab = item.labourCost * qty;
+                      return (
+                        <div key={item.id} className="py-2 flex items-center justify-between">
+                          <div>
+                            <span className="font-bold text-slate-900">{qty} × {item.name}</span>
+                            <span className="text-[11px] text-slate-500 ml-2">
+                              (Material: ₹{mat} + Labour: ₹{lab})
+                            </span>
+                          </div>
+                          <span className="font-bold text-slate-900 font-mono">₹{mat + lab}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="pt-2 border-t border-[#E2DFD8] flex items-center justify-between text-xs font-bold text-slate-700">
+                    <span>Total Material Cost</span>
+                    <span className="font-mono">₹{totalMaterialCost.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+                    <span>Total Labour Cost</span>
+                    <span className="font-mono">₹{totalLabourCost.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="pt-2 border-t border-[#17324D] flex items-center justify-between text-sm font-black text-[#17324D]">
+                    <span>Total Job Cost</span>
+                    <span className="font-mono">₹{totalJobCost.toLocaleString('en-IN')}</span>
+                  </div>
+                </div>
+
+                {/* Appointment & Address Review Block */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="p-3.5 rounded-xl bg-white border border-[#E2DFD8]">
+                    <div className="text-[10px] uppercase font-bold text-slate-400">Appointment Schedule</div>
+                    <div className="font-bold text-slate-900 mt-1">{scheduledDate}</div>
+                    <div className="text-slate-600">{scheduledTime}</div>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-white border border-[#E2DFD8]">
+                    <div className="text-[10px] uppercase font-bold text-slate-400">Doorstep Location</div>
+                    <div className="font-bold text-slate-900 mt-1 truncate">{customerName} ({customerPhone})</div>
+                    <div className="text-slate-600 truncate">{addressLine}, {cityZone}</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 7: CONFIRM & PAYMENT */}
+            {step === 7 && (
+              <div className="space-y-5 animate-in fade-in duration-200">
+                <div>
+                  <h3 className="text-base font-black text-[#17324D]">7. Payment &amp; Confirmation</h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Secure NPCI / UPI remittance. 100% of standard labour is transferred directly to the artisan.
+                  </p>
+                </div>
+
+                {createdBookingId ? (
+                  /* Success Screen after confirmation */
+                  <div className="p-6 rounded-2xl bg-white border border-[#C6E7D8] text-center space-y-4 shadow-sm">
+                    <div className="w-12 h-12 rounded-full bg-[#EDF7F2] text-[#167A5B] flex items-center justify-center font-black mx-auto">
+                      <CheckCircle2 className="w-6 h-6 text-[#167A5B]" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-black text-[#17324D]">Booking Successfully Confirmed!</h4>
+                      <p className="text-xs text-slate-600 mt-1">
+                        Assigned Artisan: <strong>{activeWorker.name}</strong> ({activeWorker.primaryTrade})
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 bg-[#FAF8F5] border border-[#E2DFD8] rounded-xl text-xs space-y-1">
+                      <div className="text-slate-500">Scheduled Arrival</div>
+                      <div className="font-bold text-[#17324D]">{scheduledDate} at {scheduledTime}</div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          closeModal();
+                          setCurrentTab('tracking');
+                        }}
+                        className="w-full py-2.5 px-4 bg-[#17324D] hover:bg-[#112437] text-white rounded-xl text-xs font-bold cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        <Navigation className="w-4 h-4 text-emerald-400" />
+                        <span>Track Worker Live</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={closeModal}
+                        className="w-full py-2.5 px-4 bg-white hover:bg-slate-50 text-slate-800 border border-[#D0D5DD] rounded-xl text-xs font-bold cursor-pointer"
+                      >
+                        Close Window
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* Payment Form */
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-3 gap-2.5">
+                      {[
+                        { id: 'UPI', label: 'UPI / QR' },
+                        { id: 'Card', label: 'RuPay / Card' },
+                        { id: 'NetBanking', label: 'NetBanking' },
+                      ].map((p) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => setPaymentMethod(p.id as any)}
+                          className={`py-3 px-2 rounded-xl border text-xs font-bold text-center transition-all cursor-pointer ${
+                            paymentMethod === p.id
+                              ? 'bg-white border-[#17324D] text-[#17324D] ring-1 ring-[#17324D] shadow-xs'
+                              : 'bg-white border-[#E2DFD8] text-slate-700 hover:bg-[#FAF8F5]'
+                          }`}
+                        >
+                          {p.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {paymentMethod === 'UPI' && (
+                      <div className="p-4 rounded-xl bg-white border border-[#E2DFD8] space-y-3">
+                        <label className="text-xs font-bold text-slate-700 block">Enter UPI ID (VPA)</label>
+                        <input
+                          type="text"
+                          value={upiId}
+                          onChange={(e) => setUpiId(e.target.value)}
+                          placeholder="e.g. yourname@oksbi"
+                          className="w-full px-3.5 py-2 bg-[#FAF8F5] border border-[#D0D5DD] rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-[#17324D]"
+                        />
+                        <div className="text-[11px] text-slate-500">
+                          Supports BHIM UPI, Google Pay, PhonePe, and Paytm.
+                        </div>
+                      </div>
+                    )}
+
+                    {paymentMethod === 'Card' && (
+                      <div className="p-4 rounded-xl bg-white border border-[#E2DFD8] space-y-3">
+                        <div>
+                          <label className="text-xs font-bold text-slate-700 block mb-1">Card Number</label>
+                          <input
+                            type="text"
+                            value={cardNumber}
+                            onChange={(e) => setCardNumber(e.target.value)}
+                            className="w-full px-3.5 py-2 bg-[#FAF8F5] border border-[#D0D5DD] rounded-xl text-xs font-mono font-medium text-slate-900"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-xs font-bold text-slate-700 block mb-1">Expiry</label>
+                            <input
+                              type="text"
+                              value={cardExpiry}
+                              onChange={(e) => setCardExpiry(e.target.value)}
+                              className="w-full px-3.5 py-2 bg-[#FAF8F5] border border-[#D0D5DD] rounded-xl text-xs font-mono"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-bold text-slate-700 block mb-1">CVV</label>
+                            <input
+                              type="password"
+                              maxLength={3}
+                              value={cardCvv}
+                              onChange={(e) => setCardCvv(e.target.value)}
+                              className="w-full px-3.5 py-2 bg-[#FAF8F5] border border-[#D0D5DD] rounded-xl text-xs font-mono"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {paymentMethod === 'NetBanking' && (
+                      <div className="p-4 rounded-xl bg-white border border-[#E2DFD8] space-y-3">
+                        <label className="text-xs font-bold text-slate-700 block">Select Cooperative Partner Bank</label>
+                        <select
+                          value={bankSelected}
+                          onChange={(e) => setBankSelected(e.target.value)}
+                          className="w-full px-3.5 py-2 bg-[#FAF8F5] border border-[#D0D5DD] rounded-xl text-xs font-bold text-slate-900"
+                        >
+                          <option value="State Bank of India (SBI)">State Bank of India (SBI)</option>
+                          <option value="Punjab National Bank (PNB)">Punjab National Bank (PNB)</option>
+                          <option value="Delhi State Co-operative Bank">Delhi State Co-operative Bank</option>
+                          <option value="HDFC Bank">HDFC Bank</option>
+                          <option value="ICICI Bank">ICICI Bank</option>
+                        </select>
+                      </div>
+                    )}
+
+                    <div className="p-3.5 rounded-xl bg-[#FAF8F5] border border-[#E2DFD8] text-xs text-slate-600 space-y-1">
+                      <div className="font-bold text-[#17324D]">Cooperative Pay Guarantee:</div>
+                      <div>
+                        100% of standard labour cost (₹{totalLabourCost}) is credited directly to {activeWorker.name}&apos;s verified bank account upon OTP sign-off.
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Navigation Buttons */}
+            {step < 7 && (
+              <div className="pt-4 border-t border-[#E4E7EC] flex items-center justify-between gap-3">
+                {step > 1 ? (
+                  <button
+                    type="button"
+                    onClick={() => setStep((s) => Math.max(1, s - 1))}
+                    className="px-4 py-2 bg-white hover:bg-[#FAF8F5] text-slate-700 border border-[#D0D5DD] rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Back</span>
+                  </button>
+                ) : (
+                  <div />
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (step === 6) {
+                      setStep(7);
+                    } else {
+                      setStep((s) => Math.min(7, s + 1));
+                    }
+                  }}
+                  className="px-5 py-2.5 bg-[#17324D] hover:bg-[#112437] text-white rounded-xl text-xs font-bold transition-colors cursor-pointer shadow-xs flex items-center gap-1.5"
+                >
+                  <span>{step === 6 ? 'Proceed to Confirm & Pay' : `Continue to ${stepsList[step]?.label}`}</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Right Sticky Booking Summary Panel (Desktop 4 Cols) */}
+          <div className="lg:col-span-4 bg-white border-t lg:border-t-0 lg:border-l border-[#E4E7EC] p-5 sm:p-6 flex flex-col justify-between space-y-6">
+            <div className="space-y-4">
+              <div className="border-b border-[#E4E7EC] pb-3">
+                <div className="text-[10px] font-bold text-[#167A5B] uppercase tracking-wider">
+                  Tariff Breakdown
+                </div>
+                <h4 className="text-sm font-black text-[#17324D] tracking-tight mt-0.5">
+                  Booking Summary
+                </h4>
               </div>
 
-              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-left text-xs max-w-md mx-auto space-y-2">
-                <div className="flex justify-between font-medium">
-                  <span className="text-slate-500">{language === 'hi' ? 'सेवा:' : 'Service:'}</span>
-                  <span className="font-bold text-slate-900">
-                    {t.categories[serviceCategory as ServiceCategory] || serviceCategory}
+              {/* Service & Items */}
+              <div className="space-y-2 text-xs">
+                <div>
+                  <span className="text-slate-500 block text-[10px] uppercase font-bold">Service</span>
+                  <span className="font-bold text-[#17324D]">{serviceCategory}</span>
+                </div>
+
+                <div>
+                  <span className="text-slate-500 block text-[10px] uppercase font-bold">Required Items</span>
+                  <div className="font-semibold text-slate-800 space-y-0.5 mt-0.5">
+                    {activeSelectedItems.length > 0 ? (
+                      activeSelectedItems.map((it) => (
+                        <div key={it.id} className="text-[11px] text-slate-700">
+                          {quantities[it.id]} × {it.name}
+                        </div>
+                      ))
+                    ) : (
+                      <span className="text-slate-400">1 × Standard service diagnostic</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Pricing: Material + Labour = Total */}
+                <div className="pt-3 border-t border-[#EBE8E1] space-y-2">
+                  <div className="flex items-center justify-between text-xs text-slate-600">
+                    <span>Material Cost</span>
+                    <span className="font-bold font-mono text-slate-900">
+                      ₹{totalMaterialCost.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs text-slate-600">
+                    <span>Labour Cost</span>
+                    <span className="font-bold font-mono text-slate-900">
+                      ₹{totalLabourCost.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+
+                  <div className="pt-2 border-t border-[#17324D] flex items-center justify-between text-sm font-black text-[#17324D]">
+                    <span>Total Job Cost</span>
+                    <span className="font-mono text-base text-[#167A5B]">
+                      ₹{totalJobCost.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Appointment Date & Time: Kept strictly separate from pricing */}
+                <div className="pt-3 border-t border-[#EBE8E1] space-y-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                    Appointment (Separate from pricing)
                   </span>
-                </div>
-                <div className="flex justify-between font-medium">
-                  <span className="text-slate-500">{language === 'hi' ? 'कारीगर:' : 'Worker:'}</span>
-                  <span className="font-bold text-slate-900">{activeWorker.name} ({activeWorker.phone})</span>
-                </div>
-                <div className="flex justify-between font-medium">
-                  <span className="text-slate-500">{language === 'hi' ? 'भुगतान किया गया अग्रिम:' : 'Advance Paid:'}</span>
-                  <span className="font-bold text-emerald-700">₹{initialAdvanceTotal} via {paymentMethod}</span>
-                </div>
-                <div className="flex justify-between font-medium">
-                  <span className="text-slate-500">{language === 'hi' ? 'अगला चरण:' : 'Next Step:'}</span>
-                  <span className="font-bold text-blue-700">
-                    {language === 'hi' ? 'ऑन-साइट तकनीकी जांच व समस्या चयन' : 'On-Site Diagnosis & Problem Selection'}
-                  </span>
+                  <div className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-[#167A5B]" />
+                    <span>{scheduledDate}</span>
+                  </div>
+                  <div className="text-xs text-slate-600 flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-slate-400" />
+                    <span>{scheduledTime}</span>
+                  </div>
                 </div>
               </div>
             </div>
-          )}
-        </div>
 
-        {/* Modal Bottom Actions */}
-        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
-          {step > 1 && step < 7 && (
-            <button
-              onClick={() => setStep(step - 1)}
-              className="px-4 py-2 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-white cursor-pointer"
-            >
-              {t.common.back}
-            </button>
-          )}
+            {/* Bottom Action in Sticky Panel */}
+            <div className="pt-4 border-t border-[#E4E7EC] space-y-2">
+              {step === 7 && !createdBookingId ? (
+                <button
+                  type="button"
+                  disabled={isProcessingPayment}
+                  onClick={handleConfirmAndPay}
+                  className="w-full py-3 bg-[#167A5B] hover:bg-[#126349] text-white rounded-xl text-xs font-bold transition-colors cursor-pointer shadow-sm flex items-center justify-center gap-2"
+                >
+                  {isProcessingPayment ? (
+                    <span>Processing NPCI Remittance...</span>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>Confirm Booking &bull; ₹{totalJobCost.toLocaleString('en-IN')}</span>
+                    </>
+                  )}
+                </button>
+              ) : step < 6 ? (
+                <button
+                  type="button"
+                  onClick={() => setStep((s) => Math.min(7, s + 1))}
+                  className="w-full py-2.5 bg-[#17324D] hover:bg-[#112437] text-white rounded-xl text-xs font-bold transition-colors cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
+                >
+                  <span>Next: {stepsList[step]?.label}</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              ) : null}
 
-          {step === 1 && (
-            <button
-              onClick={closeModal}
-              className="px-4 py-2 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-white cursor-pointer"
-            >
-              {t.common.cancel}
-            </button>
-          )}
-
-          {step < 5 && (
-            <button
-              id={`booking-next-step-${step}`}
-              onClick={() => setStep(step + 1)}
-              className="ml-auto px-5 py-2 rounded-lg bg-blue-900 hover:bg-blue-950 text-white text-xs font-bold shadow-xs cursor-pointer"
-            >
-              {t.common.next}
-            </button>
-          )}
-
-          {step === 5 && (
-            <button
-              id="booking-proceed-to-payment"
-              onClick={() => setStep(6)}
-              className="ml-auto px-5 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-xs flex items-center gap-1 cursor-pointer"
-            >
-              <CreditCard className="w-4 h-4" />
-              {language === 'hi'
-                ? `अग्रिम जांच शुल्क (₹${initialAdvanceTotal}) का भुगतान करें`
-                : `Pay Advance Diagnostic Fee (₹${initialAdvanceTotal})`}
-            </button>
-          )}
-
-          {step === 6 && (
-            <button
-              id="booking-pay-confirm-btn"
-              disabled={isProcessingPayment}
-              onClick={handleConfirmAndPay}
-              className="ml-auto px-6 py-2.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs sm:text-sm font-bold shadow-md flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-            >
-              {isProcessingPayment ? (
-                <span>{language === 'hi' ? 'एनपीसीआई गेटवे द्वारा भुगतान संसाधित...' : 'Settling via NPCI Gateway...'}</span>
-              ) : (
-                <>
-                  <CheckCircle2 className="w-4 h-4 text-emerald-200" />
-                  {language === 'hi'
-                    ? `₹${initialAdvanceTotal} अग्रिम भुगतान स्वीकृत करें`
-                    : `Authorize & Pay ₹${initialAdvanceTotal} Advance`}
-                </>
-              )}
-            </button>
-          )}
-
-          {step === 7 && (
-            <div className="ml-auto flex items-center gap-2">
-              <button
-                onClick={closeModal}
-                className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-bold transition-colors cursor-pointer"
-              >
-                {t.common.close}
-              </button>
-              <button
-                id="booking-view-live-tracking-btn"
-                onClick={() => {
-                  closeModal();
-                  setCurrentTab('tracking');
-                }}
-                className="px-5 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-xs flex items-center gap-1.5 cursor-pointer transition-colors"
-              >
-                <span className="w-2 h-2 rounded-full bg-emerald-300 animate-ping"></span>
-                <span>{language === 'hi' ? 'लाइव जीपीएस पर ट्रैक करें' : 'Track Live on GPS Radar'}</span>
-              </button>
+              <div className="text-[10px] text-center text-slate-400 font-medium">
+                Protected by ShramSetu Cooperative Charter
+              </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>

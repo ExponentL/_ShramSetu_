@@ -157,11 +157,32 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+function safeGetStorage<T>(key: string, fallback: T): T {
+  try {
+    const saved = localStorage.getItem(key);
+    if (!saved || saved === 'undefined' || saved === 'null' || saved.trim() === '') {
+      return fallback;
+    }
+    const parsed = JSON.parse(saved);
+    return parsed !== null && parsed !== undefined ? (parsed as T) : fallback;
+  } catch (err) {
+    console.warn(`[ShramSetu] Failed to parse localStorage key "${key}", falling back to default:`, err);
+    return fallback;
+  }
+}
+
+function safeSetStorage(key: string, value: any): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (err) {
+    console.warn(`[ShramSetu] Failed to set localStorage key "${key}":`, err);
+  }
+}
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Authentication state (null on fresh start to show login/register screen)
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => {
-    const saved = localStorage.getItem('shramsetu_current_user');
-    return saved ? JSON.parse(saved) : null;
+    return safeGetStorage<AuthUser | null>('shramsetu_current_user', null);
   });
 
   const [currentTab, setCurrentTab] = useState<string>('home');
@@ -176,70 +197,76 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   const [workers, setWorkers] = useState<WorkerProfile[]>(() => {
-    const saved = localStorage.getItem('coop_workers');
-    if (!saved) return INITIAL_WORKERS;
     try {
-      const parsed: WorkerProfile[] = JSON.parse(saved);
-      const existingIds = new Set(parsed.map((w) => w.id));
+      const saved = localStorage.getItem('coop_workers');
+      if (!saved || saved === 'undefined' || saved === 'null') return INITIAL_WORKERS;
+      const parsed = JSON.parse(saved);
+      if (!Array.isArray(parsed) || parsed.length === 0) return INITIAL_WORKERS;
+      const existingIds = new Set(parsed.map((w) => w?.id).filter(Boolean));
       const missingInitial = INITIAL_WORKERS.filter((iw) => !existingIds.has(iw.id));
       const fullList = [...missingInitial, ...parsed];
       return fullList.map((w) => {
-        const initial = INITIAL_WORKERS.find((iw) => iw.id === w.id);
+        const initial = INITIAL_WORKERS.find((iw) => iw.id === w?.id);
         return {
           ...w,
-          cooperativeVerificationStatus: w.cooperativeVerificationStatus || initial?.cooperativeVerificationStatus || 'PENDING',
-          cooperativeVerifiedAt: w.cooperativeVerifiedAt !== undefined ? w.cooperativeVerifiedAt : initial?.cooperativeVerifiedAt,
-          cooperativeVerifiedBy: w.cooperativeVerifiedBy !== undefined ? w.cooperativeVerifiedBy : initial?.cooperativeVerifiedBy,
-          shramsetuVerificationStatus: w.shramsetuVerificationStatus || initial?.shramsetuVerificationStatus || 'PENDING',
-          shramsetuVerifiedAt: w.shramsetuVerifiedAt !== undefined ? w.shramsetuVerifiedAt : initial?.shramsetuVerifiedAt,
-          shramsetuVerifiedBy: w.shramsetuVerifiedBy !== undefined ? w.shramsetuVerifiedBy : initial?.shramsetuVerifiedBy,
+          skills: Array.isArray(w?.skills) ? w.skills : (initial?.skills || []),
+          certifications: Array.isArray(w?.certifications) ? w.certifications : (initial?.certifications || []),
+          cooperativeVerificationStatus: w?.cooperativeVerificationStatus || initial?.cooperativeVerificationStatus || 'PENDING',
+          cooperativeVerifiedAt: w?.cooperativeVerifiedAt !== undefined ? w.cooperativeVerifiedAt : initial?.cooperativeVerifiedAt,
+          cooperativeVerifiedBy: w?.cooperativeVerifiedBy !== undefined ? w.cooperativeVerifiedBy : initial?.cooperativeVerifiedBy,
+          shramsetuVerificationStatus: w?.shramsetuVerificationStatus || initial?.shramsetuVerificationStatus || 'PENDING',
+          shramsetuVerifiedAt: w?.shramsetuVerifiedAt !== undefined ? w.shramsetuVerifiedAt : initial?.shramsetuVerifiedAt,
+          shramsetuVerifiedBy: w?.shramsetuVerifiedBy !== undefined ? w.shramsetuVerifiedBy : initial?.shramsetuVerifiedBy,
         };
       });
-    } catch {
+    } catch (err) {
+      console.warn('[ShramSetu] Failed to parse coop_workers, resetting to INITIAL_WORKERS:', err);
       return INITIAL_WORKERS;
     }
   });
 
   const [governmentVerifications, setGovernmentVerifications] = useState<GovernmentVerification[]>(() => {
-    const saved = localStorage.getItem('coop_gov_verifications');
-    if (!saved) return INITIAL_GOVERNMENT_VERIFICATIONS;
     try {
-      const parsed: GovernmentVerification[] = JSON.parse(saved);
-      const existingIds = new Set(parsed.map((gv) => gv.id));
+      const saved = localStorage.getItem('coop_gov_verifications');
+      if (!saved || saved === 'undefined' || saved === 'null') return INITIAL_GOVERNMENT_VERIFICATIONS;
+      const parsed = JSON.parse(saved);
+      if (!Array.isArray(parsed) || parsed.length === 0) return INITIAL_GOVERNMENT_VERIFICATIONS;
+      const existingIds = new Set(parsed.map((gv) => gv?.id).filter(Boolean));
       const missingInitial = INITIAL_GOVERNMENT_VERIFICATIONS.filter((igv) => !existingIds.has(igv.id));
       return [...missingInitial, ...parsed];
-    } catch {
+    } catch (err) {
+      console.warn('[ShramSetu] Failed to parse coop_gov_verifications, resetting to default:', err);
       return INITIAL_GOVERNMENT_VERIFICATIONS;
     }
   });
 
   useEffect(() => {
-    localStorage.setItem('coop_gov_verifications', JSON.stringify(governmentVerifications));
+    safeSetStorage('coop_gov_verifications', governmentVerifications);
   }, [governmentVerifications]);
 
   const [bookings, setBookings] = useState<Booking[]>(() => {
-    const saved = localStorage.getItem('coop_bookings');
-    return saved ? JSON.parse(saved) : INITIAL_BOOKINGS;
+    const loaded = safeGetStorage<Booking[]>('coop_bookings', INITIAL_BOOKINGS);
+    return Array.isArray(loaded) && loaded.length > 0 ? loaded : INITIAL_BOOKINGS;
   });
 
   const [reviews, setReviews] = useState<ReviewItem[]>(() => {
-    const saved = localStorage.getItem('coop_reviews');
-    return saved ? JSON.parse(saved) : INITIAL_REVIEWS;
+    const loaded = safeGetStorage<ReviewItem[]>('coop_reviews', INITIAL_REVIEWS);
+    return Array.isArray(loaded) ? loaded : INITIAL_REVIEWS;
   });
 
   const [complaints, setComplaints] = useState<Complaint[]>(() => {
-    const saved = localStorage.getItem('coop_complaints');
-    return saved ? JSON.parse(saved) : INITIAL_COMPLAINTS;
+    const loaded = safeGetStorage<Complaint[]>('coop_complaints', INITIAL_COMPLAINTS);
+    return Array.isArray(loaded) ? loaded : INITIAL_COMPLAINTS;
   });
 
   const [welfareSchemes, setWelfareSchemes] = useState<WelfareScheme[]>(() => {
-    const saved = localStorage.getItem('coop_welfare');
-    return saved ? JSON.parse(saved) : INITIAL_WELFARE_SCHEMES;
+    const loaded = safeGetStorage<WelfareScheme[]>('coop_welfare', INITIAL_WELFARE_SCHEMES);
+    return Array.isArray(loaded) && loaded.length > 0 ? loaded : INITIAL_WELFARE_SCHEMES;
   });
 
   const [demandForecasts, setDemandForecasts] = useState<DemandForecast[]>(() => {
-    const saved = localStorage.getItem('coop_forecasts');
-    return saved ? JSON.parse(saved) : INITIAL_DEMAND_FORECASTS;
+    const loaded = safeGetStorage<DemandForecast[]>('coop_forecasts', INITIAL_DEMAND_FORECASTS);
+    return Array.isArray(loaded) && loaded.length > 0 ? loaded : INITIAL_DEMAND_FORECASTS;
   });
 
   const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
@@ -256,21 +283,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isDiagnosisModalOpen, setIsDiagnosisModalOpen] = useState<boolean>(false);
   const [diagnosisTargetBooking, setDiagnosisTargetBooking] = useState<Booking | null>(null);
 
-  // Sync to local storage
+  // Sync to local storage safely
   useEffect(() => {
-    localStorage.setItem('coop_workers', JSON.stringify(workers));
+    safeSetStorage('coop_workers', workers);
   }, [workers]);
 
   useEffect(() => {
-    localStorage.setItem('coop_bookings', JSON.stringify(bookings));
+    safeSetStorage('coop_bookings', bookings);
   }, [bookings]);
 
   useEffect(() => {
-    localStorage.setItem('coop_reviews', JSON.stringify(reviews));
+    safeSetStorage('coop_reviews', reviews);
   }, [reviews]);
 
   useEffect(() => {
-    localStorage.setItem('coop_complaints', JSON.stringify(complaints));
+    safeSetStorage('coop_complaints', complaints);
   }, [complaints]);
 
   // Current translation strings
@@ -1052,13 +1079,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const login = (user: AuthUser) => {
     setCurrentUser(user);
     setCurrentRole(user.role);
-    localStorage.setItem('shramsetu_current_user', JSON.stringify(user));
+    safeSetStorage('shramsetu_current_user', user);
     logAudit(`USER_LOGIN_${user.role.toUpperCase()}`, `User: ${user.name} (${user.phone})`);
   };
 
   const logout = () => {
     setCurrentUser(null);
-    localStorage.removeItem('shramsetu_current_user');
+    try {
+      localStorage.removeItem('shramsetu_current_user');
+    } catch (_) {}
     logAudit('USER_LOGOUT', 'User logged out');
   };
 

@@ -69,29 +69,41 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
     if (!mapContainerRef.current) return;
 
     if (!mapInstanceRef.current) {
-      const map = L.map(mapContainerRef.current, {
-        zoomControl: false,
-        scrollWheelZoom: true,
-      }).setView(center, zoom);
+      if ((mapContainerRef.current as any)._leaflet_id) {
+        (mapContainerRef.current as any)._leaflet_id = null;
+      }
+      try {
+        const map = L.map(mapContainerRef.current, {
+          zoomControl: false,
+          scrollWheelZoom: true,
+        }).setView(center, zoom);
 
-      L.control.zoom({ position: 'bottomright' }).addTo(map);
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-      const config = tileLayerUrls[currentLayer];
-      const initialTile = L.tileLayer(config.url, {
-        attribution: config.attribution,
-        maxZoom: config.maxZoom,
-      }).addTo(map);
+        const config = tileLayerUrls[currentLayer];
+        const initialTile = L.tileLayer(config.url, {
+          attribution: config.attribution,
+          maxZoom: config.maxZoom,
+        }).addTo(map);
 
-      tileLayerRef.current = initialTile;
-      const layerGroup = L.layerGroup().addTo(map);
-      layerGroupRef.current = layerGroup;
-      mapInstanceRef.current = map;
+        tileLayerRef.current = initialTile;
+        const layerGroup = L.layerGroup().addTo(map);
+        layerGroupRef.current = layerGroup;
+        mapInstanceRef.current = map;
+      } catch (err) {
+        console.warn('[LeafletMap] Map initialization caught error:', err);
+      }
     }
 
     return () => {
       if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
+        try {
+          mapInstanceRef.current.remove();
+        } catch (_) {}
         mapInstanceRef.current = null;
+      }
+      if (mapContainerRef.current && (mapContainerRef.current as any)._leaflet_id) {
+        (mapContainerRef.current as any)._leaflet_id = null;
       }
     };
   }, []);

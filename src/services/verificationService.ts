@@ -193,9 +193,19 @@ export interface WorkerThreeTierSummary {
  */
 export const getWorkerVerificationSummary = (
   worker: WorkerProfile,
-  allGovernmentVerifications: GovernmentVerification[]
+  allGovernmentVerifications: GovernmentVerification[] = []
 ): WorkerThreeTierSummary => {
-  const govVerif = allGovernmentVerifications.find((gv) => gv.workerId === worker.id) || null;
+  if (!worker) {
+    return {
+      workerId: '',
+      workerName: '',
+      overallStatus: 'IN_PROGRESS',
+      layer1Government: null,
+      layer2Cooperative: { status: 'PENDING', societyName: '', verifiedAt: null, verifiedBy: null },
+      layer3ShramSetu: { status: 'PENDING', verifiedAt: null, verifiedBy: null },
+    };
+  }
+  const govVerif = (allGovernmentVerifications || []).find((gv) => gv?.workerId === worker.id) || null;
 
   const authorityNames: Record<VerificationAuthority, string> = {
     CLC: 'Chief Labour Commissioner (Central)',

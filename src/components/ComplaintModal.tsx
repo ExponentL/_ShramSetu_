@@ -11,9 +11,8 @@ import {
   ShieldAlert,
   HelpCircle,
   Building2,
-  ShieldCheck,
 } from 'lucide-react';
-
+ 
 export const ComplaintModal: React.FC = () => {
   const {
     isComplaintModalOpen,
@@ -24,8 +23,6 @@ export const ComplaintModal: React.FC = () => {
     submitComplaint,
     language,
     t,
-    workers,
-    governmentVerifications,
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<'file' | 'history'>('file');
@@ -85,14 +82,15 @@ export const ComplaintModal: React.FC = () => {
   // Form State
   const [selectedCategory, setSelectedCategory] = useState<ComplaintCategory>(relevantCategories[0]);
   const [bookingId, setBookingId] = useState<string>(bookings[0]?.id || '');
+  const [subject, setSubject] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [attachmentName, setAttachmentName] = useState<string>('');
   const [submittedMsg, setSubmittedMsg] = useState<boolean>(false);
 
   if (!isComplaintModalOpen) return null;
 
-  // Filter complaints: admins see all complaints, otherwise filtered by active role
-  const complaintList = currentRole === 'admin' ? complaints : complaints.filter((c) =>
+  // Filter complaints filed by current user or relevant to active role
+  const myComplaints = complaints.filter((c) =>
     currentRole === 'worker' ? c.filedByRole === 'worker' : c.filedByRole === 'customer'
   );
 
@@ -102,11 +100,12 @@ export const ComplaintModal: React.FC = () => {
       bookingId: bookingId || undefined,
       filedByRole: currentRole === 'worker' ? 'worker' : 'customer',
       category: selectedCategory,
-      description,
+      description: subject ? `${subject} - ${description}` : description,
       attachments: attachmentName ? [attachmentName] : [],
     });
 
     setSubmittedMsg(true);
+    setSubject('');
     setDescription('');
     setAttachmentName('');
     setTimeout(() => {
@@ -179,7 +178,7 @@ export const ComplaintModal: React.FC = () => {
           >
             <span>{language === 'hi' ? 'मेरी शिकायत स्थिति' : 'My Grievance Status'}</span>
             <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-700">
-              {complaintList.length}
+              {myComplaints.length}
             </span>
           </button>
         </div>
@@ -220,15 +219,15 @@ export const ComplaintModal: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Complaint Category */}
+                {/* Problem Type */}
                 <div>
-                  <label className="text-xs font-semibold text-slate-700 block mb-1">
-                    {language === 'hi' ? 'शिकायत श्रेणी' : 'Grievance Category'}
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Problem Type
                   </label>
                   <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value as ComplaintCategory)}
-                    className="w-full p-2.5 rounded-lg border border-slate-300 text-xs font-medium"
+                    className="w-full min-h-[44px] p-2.5 rounded-xl border border-slate-300 text-xs font-medium bg-white"
                   >
                     {relevantCategories.map((cat) => (
                       <option key={cat} value={cat}>
@@ -238,15 +237,30 @@ export const ComplaintModal: React.FC = () => {
                   </select>
                 </div>
 
+                {/* Subject */}
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Subject
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    placeholder="Brief summary of the issue..."
+                    className="w-full min-h-[44px] p-2.5 rounded-xl border border-slate-300 text-xs font-medium bg-white"
+                  />
+                </div>
+
                 {/* Booking ID Selector */}
                 <div>
-                  <label className="text-xs font-semibold text-slate-700 block mb-1">
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
                     {language === 'hi' ? 'संबंधित बुकिंग संख्या' : 'Associated Booking ID'}
                   </label>
                   <select
                     value={bookingId}
                     onChange={(e) => setBookingId(e.target.value)}
-                    className="w-full p-2.5 rounded-lg border border-slate-300 text-xs font-medium"
+                    className="w-full min-h-[44px] p-2.5 rounded-xl border border-slate-300 text-xs font-medium bg-white"
                   >
                     <option value="">
                       {language === 'hi' ? 'सामान्य (कोई विशिष्ट बुकिंग नहीं)' : 'General (No Specific Booking)'}
@@ -259,45 +273,37 @@ export const ComplaintModal: React.FC = () => {
                   </select>
                 </div>
 
-                {/* Detailed Description */}
+                {/* Description */}
                 <div>
-                  <label className="text-xs font-semibold text-slate-700 block mb-1">
-                    {language === 'hi' ? 'शिकायत का तथ्यपरक विवरण' : 'Factual Description of Grievance'}
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Description
                   </label>
                   <textarea
                     rows={4}
                     required
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder={
-                      language === 'hi'
-                        ? 'तारीख, समय, क्या घटना घटी, और अपेक्षित समाधान सहित स्पष्ट विवरण प्रदान करें...'
-                        : 'Provide clear details including date, time, what happened, and requested remediation...'
-                    }
-                    className="w-full p-3 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-blue-800"
+                    placeholder="Provide clear details including date, time, what happened, and requested remediation..."
+                    className="w-full p-3 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-[#17324D] bg-white"
                   />
                 </div>
 
-                {/* Optional Attachment Simulator */}
+                {/* Attachment if supported */}
                 <div>
-                  <label className="text-xs font-semibold text-slate-700 block mb-1">
-                    {language === 'hi' ? 'सहायक दस्तावेज / तस्वीरें (वैकल्पिक)' : 'Supporting Documents / Photos (Optional)'}
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Attachment (Optional)
                   </label>
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
                       value={attachmentName}
                       onChange={(e) => setAttachmentName(e.target.value)}
-                      placeholder={
-                        language === 'hi'
-                          ? 'उदा. मीटर_स्पार्क_फोटो.jpg या रसीद.pdf'
-                          : 'e.g. meter_spark_photo.jpg or payment_receipt.pdf'
-                      }
-                      className="flex-1 p-2 rounded-lg border border-slate-300 text-xs"
+                      placeholder="e.g. photo.jpg or receipt.pdf"
+                      className="flex-1 min-h-[44px] p-2 rounded-xl border border-slate-300 text-xs bg-white"
                     />
-                    <label className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg cursor-pointer border border-slate-300 flex items-center gap-1">
-                      <Paperclip className="w-3.5 h-3.5" />
-                      {language === 'hi' ? 'चुनें' : 'Browse'}
+                    <label className="min-h-[44px] px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl cursor-pointer border border-slate-300 flex items-center gap-1.5">
+                      <Paperclip className="w-4 h-4" />
+                      <span>Browse</span>
                       <input
                         type="file"
                         className="hidden"
@@ -311,139 +317,79 @@ export const ComplaintModal: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="pt-2 flex items-center justify-end gap-2">
+                <div className="pt-2 flex items-center justify-end gap-2.5">
                   <button
                     type="button"
                     onClick={() => setIsComplaintModalOpen(false)}
-                    className="px-4 py-2 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
+                    className="min-h-[44px] px-4 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer flex items-center justify-center"
                   >
                     {t.common.cancel}
                   </button>
                   <button
                     id="submit-grievance-btn"
                     type="submit"
-                    className="px-5 py-2 rounded-lg bg-blue-900 hover:bg-blue-950 text-white text-xs font-bold shadow-xs cursor-pointer"
+                    className="min-h-[44px] px-5 py-2.5 rounded-xl bg-[#17324D] hover:bg-[#112437] text-white text-xs font-bold shadow-xs cursor-pointer flex items-center justify-center btn-tactile"
                   >
-                    {language === 'hi' ? 'आधिकारिक शिकायत दर्ज करें' : 'Lodge Official Grievance'}
+                    <span>Submit Complaint</span>
                   </button>
                 </div>
               </form>
             )
           ) : (
             <div className="space-y-3">
-              {complaintList.length === 0 ? (
+              {myComplaints.length === 0 ? (
                 <div className="py-8 text-center text-xs text-slate-500 bg-slate-50 rounded-xl">
                   {language === 'hi'
-                    ? 'कोई शिकायत दर्ज नहीं है।'
-                    : 'No grievances recorded.'}
+                    ? 'आपके खाते द्वारा कोई शिकायत दर्ज नहीं की गई है।'
+                    : 'No grievances lodged by your account.'}
                 </div>
               ) : (
-                complaintList.map((c) => {
-                  const linkedBooking = bookings.find((b) => b.id === c.bookingId);
-                  const involvedWorker = workers.find(
-                    (w) => w.id === c.againstId || (linkedBooking && w.id === linkedBooking.workerId)
-                  );
-                  const govRec = involvedWorker
-                    ? governmentVerifications.find((gv) => gv.workerId === involvedWorker.id)
-                    : null;
-
-                  return (
-                    <div
-                      key={c.id}
-                      className="p-4 rounded-xl border border-slate-200 bg-slate-50 text-xs space-y-2.5"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-slate-900">{c.complaintNumber}</span>
-                            <span
-                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${getStatusBadge(
-                                c.status
-                              )}`}
-                            >
-                              {getLocalizedStatus(c.status)}
-                            </span>
-                          </div>
-                          <div className="text-[11px] text-slate-500 mt-0.5">
-                            {language === 'hi' ? 'श्रेणी: ' : 'Category: '}
-                            <strong className="text-slate-800">{getLocalizedCategory(c.category)}</strong>
-                            {language === 'hi' ? ' • दर्ज तिथि: ' : ' • Lodged on '}
-                            {c.submissionDate}
-                          </div>
+                myComplaints.map((c) => (
+                  <div
+                    key={c.id}
+                    className="p-4 rounded-xl border border-slate-200 bg-slate-50 text-xs space-y-2"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-slate-900">{c.complaintNumber}</span>
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${getStatusBadge(
+                              c.status
+                            )}`}
+                          >
+                            {getLocalizedStatus(c.status)}
+                          </span>
                         </div>
-                        <span className="text-[10px] uppercase font-bold text-slate-400">
-                          {language === 'hi'
-                            ? `भूमिका: ${c.filedByRole === 'worker' ? 'कारीगर' : 'नागरिक'}`
-                            : `Role: ${c.filedByRole}`}
-                        </span>
+                        <div className="text-[11px] text-slate-500 mt-0.5">
+                          {language === 'hi' ? 'श्रेणी: ' : 'Category: '}
+                          <strong className="text-slate-800">{getLocalizedCategory(c.category)}</strong>
+                          {language === 'hi' ? ' • दर्ज तिथि: ' : ' • Lodged on '}
+                          {c.submissionDate}
+                        </div>
                       </div>
-
-                      <p className="text-slate-700 leading-relaxed bg-white p-2.5 rounded-lg border border-slate-200">
-                        "{c.description}"
-                      </p>
-
-                      {/* Internal Context: Worker Verification Statuses */}
-                      {involvedWorker && (
-                        <div className="p-3 bg-neutral-100/90 rounded-xl border border-neutral-200 space-y-2 mt-2">
-                          <div className="flex items-center justify-between">
-                            <div className="text-[11px] font-bold text-neutral-900 flex items-center gap-1.5">
-                              <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
-                              <span>Worker Verification Status (Internal Context)</span>
-                            </div>
-                            <span className="text-[10px] font-bold text-neutral-700">
-                              {involvedWorker.name} ({involvedWorker.primaryTrade})
-                            </span>
-                          </div>
-
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px]">
-                            <div className="p-2 rounded-lg bg-white border border-neutral-200">
-                              <div className="text-[10px] text-neutral-500 font-medium">Government Verification</div>
-                              <div className="font-bold text-neutral-900 mt-0.5">
-                                {govRec?.status === 'VERIFIED' ? (
-                                  <span className="text-emerald-700">✓ Verified ({govRec.authority})</span>
-                                ) : (
-                                  <span className="text-amber-700">{govRec?.status || 'PENDING'}</span>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="p-2 rounded-lg bg-white border border-neutral-200">
-                              <div className="text-[10px] text-neutral-500 font-medium">Cooperative Verification</div>
-                              <div className="font-bold text-neutral-900 mt-0.5">
-                                {involvedWorker.cooperativeVerificationStatus === 'VERIFIED' ? (
-                                  <span className="text-emerald-700">✓ Verified</span>
-                                ) : (
-                                  <span className="text-amber-700">{involvedWorker.cooperativeVerificationStatus || 'PENDING'}</span>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="p-2 rounded-lg bg-white border border-neutral-200">
-                              <div className="text-[10px] text-neutral-500 font-medium">ShramSetu Verification</div>
-                              <div className="font-bold text-neutral-900 mt-0.5">
-                                {involvedWorker.shramsetuVerificationStatus === 'VERIFIED' ? (
-                                  <span className="text-emerald-700">✓ Verified</span>
-                                ) : (
-                                  <span className="text-amber-700">{involvedWorker.shramsetuVerificationStatus || 'PENDING'}</span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {c.resolutionNotes && (
-                        <div className="p-2.5 bg-emerald-50 rounded-lg border border-emerald-200 text-emerald-950">
-                          <div className="font-bold text-[11px] text-emerald-800 flex items-center gap-1">
-                            <CheckCircle2 className="w-3 h-3" />
-                            {language === 'hi' ? 'सहकारी समिति का निवारण निर्णय:' : 'Cooperative Committee Resolution:'}
-                          </div>
-                          <p className="text-[11px] mt-0.5">{c.resolutionNotes}</p>
-                        </div>
-                      )}
+                      <span className="text-[10px] uppercase font-bold text-slate-400">
+                        {language === 'hi'
+                          ? `भूमिका: ${c.filedByRole === 'worker' ? 'कारीगर' : 'नागरिक'}`
+                          : `Role: ${c.filedByRole}`}
+                      </span>
                     </div>
-                  );
-                })
+
+                    <p className="text-slate-700 leading-relaxed bg-white p-2.5 rounded-lg border border-slate-200">
+                      "{c.description}"
+                    </p>
+
+                    {c.resolutionNotes && (
+                      <div className="p-2.5 bg-emerald-50 rounded-lg border border-emerald-200 text-emerald-950">
+                        <div className="font-bold text-[11px] text-emerald-800 flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3" />
+                          {language === 'hi' ? 'सहकारी समिति का निवारण निर्णय:' : 'Cooperative Committee Resolution:'}
+                        </div>
+                        <p className="text-[11px] mt-0.5">{c.resolutionNotes}</p>
+                      </div>
+                    )}
+                  </div>
+                ))
               )}
             </div>
           )}

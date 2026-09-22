@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { ServiceCategory } from '../types';
 import { TradeBadgeAvatar } from './TradeBadgeAvatar';
+import { INITIAL_WORKERS } from '../data/mockData';
 import { X } from 'lucide-react';
 
 export const EmergencyModal: React.FC = () => {
@@ -39,6 +40,12 @@ export const EmergencyModal: React.FC = () => {
       tag: 'PLUMBING',
     },
     {
+      id: 'lockout_sos',
+      title: language === 'hi' ? 'ताला जाम / चाबी टूटना / मुख्य द्वार लॉकआउट' : 'Lockout / Jammed Entrance Lock / Key Broken',
+      category: 'Carpentry' as ServiceCategory,
+      tag: 'LOCKOUT',
+    },
+    {
       id: 'technician_sos',
       title: language === 'hi' ? 'आवश्यक उपकरण विफलता / रेफ्रिजरेटर गैस' : 'Critical Appliance Breakdown / Refrigerator Gas',
       category: 'Technician' as ServiceCategory,
@@ -48,8 +55,9 @@ export const EmergencyModal: React.FC = () => {
 
   // Nearest verified standby worker
   const standbyWorker =
-    workers.find((w) => w.isVerified && w.isAvailable && w.skills.includes(category)) ||
-    workers[0];
+    workers.find((w) => w.isVerified && w.isAvailable && (w.skills || []).includes(category)) ||
+    workers[0] ||
+    INITIAL_WORKERS[0];
 
   const handleInstantDispatch = () => {
     const newBooking = createBooking({

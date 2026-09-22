@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import { INITIAL_WORKERS } from '../data/mockData';
 import {
   MessageCircle,
   X,
@@ -73,9 +74,9 @@ export const CustomerChatbot: React.FC = () => {
     {
       id: 'msg-init-1',
       sender: 'bot',
-      text: 'Namaste! Welcome to ShramSetu Help & Support. How can we assist you with our cooperative services, bookings, or worker verification today?',
+      text: 'Namaste! Welcome to ShramSetu Help & Support.\nHow can we help you today? Please choose an option below or ask your question.',
       hindiText:
-        'नमस्ते! श्रमसेतु सहायता केंद्र (Help & Support) में आपका स्वागत है। आज सेवाओं, बुकिंग या कारीगर सत्यापन में हम आपकी क्या मदद कर सकते हैं?',
+        'नमस्ते! श्रमसेतु सहायता केंद्र (Help & Support) में आपका स्वागत है।\nआज हम आपकी क्या मदद कर सकते हैं? कृपया नीचे दिए गए विकल्पों में से चुनें या अपना प्रश्न पूछें।',
       punjabiText:
         'ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ! ਸ਼੍ਰਮਸੇਤੂ ਸਹਾਇਤਾ ਕੇਂਦਰ ਵਿੱਚ ਤੁਹਾਡਾ ਸਵਾਗਤ ਹੈ। ਅੱਜ ਅਸੀਂ ਤੁਹਾਡੀ ਕੀ ਮਦਦ ਕਰ ਸਕਦੇ ਹਾਂ?',
       timestamp: 'Just now',
@@ -83,6 +84,16 @@ export const CustomerChatbot: React.FC = () => {
   ];
 
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+
+  // 6 Primary Support Options requested for the Help Drawer
+  const supportOptions = [
+    { id: 'track-booking', label: 'Track my booking', hi: 'बुकिंग ट्रैक करें', pa: 'ਬੁਕਿੰਗ ਟ੍ਰੈਕ ਕਰੋ' },
+    { id: 'payment-issue', label: 'Payment issue', hi: 'भुगतान समस्या', pa: 'ਭੁਗਤਾਨ ਸਮੱਸਿਆ' },
+    { id: 'booking-issue', label: 'Booking issue', hi: 'बुकिंग समस्या', pa: 'ਬੁਕਿੰਗ ਸਮੱਸਿਆ' },
+    { id: 'report-problem', label: 'Report a problem', hi: 'समस्या दर्ज करें', pa: 'ਸਮੱਸਿਆ ਦਰਜ ਕਰੋ' },
+    { id: 'complaint-status', label: 'Complaint status', hi: 'शिकायत स्थिति', pa: 'ਸ਼ਿਕਾਇਤ ਸਥਿਤੀ' },
+    { id: 'contact-support', label: 'Contact support', hi: 'सहायता संपर्क', pa: 'ਸਹਾਇਤਾ ਸੰਪਰਕ' },
+  ];
 
   // Active travelling booking for instant banner in assistant
   const activeBooking = bookings.find(
@@ -129,7 +140,7 @@ export const CustomerChatbot: React.FC = () => {
       id: 'qp-rates',
       labelEn: 'Zero commission & worker 90% payout',
       labelHi: 'शून्य कमीशन व कारीगर को 90% भुगतान',
-      labelPa: 'ਜ਼ੀਰੋ ਕਮੀਸ਼ਨ ਤੇ 90% ਸਿੱਧੀ ਤਨਖਾਹ',
+      labelPa: 'ਜ਼ੀਰो ਕਮੀਸ਼ਨ ਤੇ 90% ਸਿੱਧੀ ਤਨਖਾਹ',
       action: 'rates',
     },
     {
@@ -214,7 +225,8 @@ export const CustomerChatbot: React.FC = () => {
         selectedWorkerForProfile ||
         (activeBooking ? workers.find((w) => w.id === activeBooking.workerId) : undefined) ||
         workers.find((w) => w.id === 'w-102') ||
-        workers[0];
+        workers[0] ||
+        INITIAL_WORKERS[0];
 
       const govRec = governmentVerifications.find((gv) => gv.workerId === targetWorker.id);
       const govStatus = govRec ? govRec.status : 'NOT_VERIFIED';
@@ -384,9 +396,87 @@ export const CustomerChatbot: React.FC = () => {
       };
     }
 
+    // 1. Track my booking
+    if (q.includes('track-booking') || (q.includes('track') && q.includes('booking'))) {
+      if (activeBooking) {
+        return {
+          text: `Your booking #${activeBooking.bookingNumber} with ${activeBooking.workerName} (${activeBooking.serviceCategory}) is active.\nStatus: ${activeBooking.status}\nClick below to track on the live map.`,
+          hindiText: `आपकी बुकिंग #${activeBooking.bookingNumber} (${activeBooking.workerName}) प्रगति पर है।\nस्थिति: ${activeBooking.status}\nलाइव जीपीएस पर देखने के लिए नीचे क्लिक करें।`,
+          actionButton: {
+            label: 'Track on Live GPS',
+            hindiLabel: 'लाइव जीपीएस पर देखें',
+            actionType: 'tracking',
+          },
+        };
+      }
+      return {
+        text: 'You have no active bookings en route at the moment. You can view all past and scheduled bookings in your dashboard or explore certified professionals to book.',
+        hindiText: 'वर्तमान में आपकी कोई भी बुकिंग रास्ते में नहीं है। आप अपने डैशबोर्ड में पूर्व बुकिंग देख सकते हैं या नए कारीगर बुक कर सकते हैं।',
+        actionButton: {
+          label: 'View Tracking Dashboard',
+          hindiLabel: 'ट्रैकिंग डैशबोर्ड देखें',
+          actionType: 'tracking',
+        },
+      };
+    }
+
+    // 2. Payment support
+    if (q.includes('payment-support') || (q.includes('payment') && (q.includes('support') || q.includes('help') || q.includes('issue')))) {
+      return {
+        text: 'Payment Support & Tariff Guarantee:\n• ShramSetu uses strict job-based pricing: Items/Quantity + Material Cost + Labour Cost = Total Job Cost.\n• 100% of standard labour is paid directly to verified cooperative artisans.\n• Zero surge fees, transparent itemized task pricing, and secure payment upon satisfied completion.',
+        hindiText: 'भुगतान सहायता एवं दर गारंटी:\n• श्रमसेतु कार्य-आधारित पारदर्शी मूल्य निर्धारण प्रणाली का उपयोग करता है (सामग्री लागत + श्रम शुल्क = कुल लागत)।\n• 100% श्रम शुल्क सीधे सहकारी कामगार को प्राप्त होता है।\n• कोई मनमाना सर्ज शुल्क नहीं!',
+      };
+    }
+
+    // 3. Booking support
+    if (q.includes('booking-support') || (q.includes('booking') && q.includes('support'))) {
+      return {
+        text: 'Booking Support:\n1. Choose your trade (Electrician, Plumber, Carpenter, etc.).\n2. Specify required items and quantities.\n3. Choose your appointment date and time.\n4. You will receive an arrival safety PIN before work starts.',
+        hindiText: 'बुकिंग सहायता:\n1. अपनी जरूरत का ट्रेड चुनें।\n2. काम की मात्रा और आवश्यक सामान दर्ज करें।\n3. अपनी सुविधानुसार समय चुनें।\n4. काम शुरू होने से पहले आपको सुरक्षा पिन प्राप्त होगा।',
+        actionButton: {
+          label: 'Search & Book Workers',
+          hindiLabel: 'कारीगर खोजें और बुक करें',
+          actionType: 'explore',
+        },
+      };
+    }
+
+    // 4. Report a problem
+    if (q.includes('report-problem') || q.includes('report a problem') || (q.includes('problem') && q.includes('report'))) {
+      return {
+        text: 'Report a Problem:\nIf you encountered poor workmanship, delayed arrival, or inappropriate conduct, you can lodge an official grievance under the Cooperative Societies Act. Our Society Oversight Committee resolves disputes within 24 hours.',
+        hindiText: 'समस्या दर्ज करें:\nयदि काम में खराबी, देरी या अनुचित आचरण हुआ है, तो आप सहकारी समिति के तहत आधिकारिक शिकायत दर्ज कर सकते हैं। 24 घंटे में समाधान सुनिश्चित किया जाता है।',
+        actionButton: {
+          label: 'Report a Problem Now',
+          hindiLabel: 'अभी समस्या दर्ज करें',
+          actionType: 'complaint',
+        },
+      };
+    }
+
+    // 5. Complaint status
+    if (q.includes('complaint-status') || q.includes('complaint status')) {
+      return {
+        text: 'Grievance Resolution Timeline:\n• Submitted → Under Review → Response Requested → Resolution → Closed.\nClick below to inspect the real-time status and resolution notes of your recorded complaints.',
+        hindiText: 'शिकायत निवारण समयरेखा:\n• दर्ज (Submitted) → समीक्षाधीन (Under Review) → प्रतिक्रिया अपेक्षित → समाधान (Resolution) → बंद (Closed)।\nअपनी शिकायतों की स्थिति देखने के लिए नीचे क्लिक करें।',
+        actionButton: {
+          label: 'View Complaint Status',
+          hindiLabel: 'शिकायत स्थिति देखें',
+          actionType: 'complaint',
+        },
+      };
+    }
+
+    // 6. Contact support
+    if (q.includes('contact-support') || q.includes('contact support') || q.includes('helpline') || q.includes('phone')) {
+      return {
+        text: 'ShramSetu Cooperative Support Helpdesk:\n📞 Toll-Free Helpline: 1800-419-2667 (Mon-Sat, 8 AM - 8 PM)\n🚨 24x7 Emergency SOS: Available on the website\n📧 Official Email: support@shramsetu.in\n📍 Cooperative Oversight Office: Bahadurgarh, Haryana',
+        hindiText: 'श्रमसेतु सहकारी सहायता केंद्र:\n📞 टोल-फ्री हेल्पलाइन: 1800-419-2667 (सोम-शनि, सुबह 8 से रात 8)\n🚨 24x7 आपातकालीन सहायता: वेबसाइट पर उपलब्ध\n📧 आधिकारिक ईमेल: support@shramsetu.in\n📍 सहकारी निगरानी कार्यालय: बहादुरगढ़, हरियाणा',
+      };
+    }
+
     if (
       q.includes('safety') ||
-      q.includes('verified') ||
       q.includes('police') ||
       q.includes('suraksha') ||
       q.includes('trust')
@@ -498,10 +588,10 @@ export const CustomerChatbot: React.FC = () => {
       {isOpen && (
         <div
           id="chatbot-panel"
-          className="w-[calc(100vw-1.5rem)] sm:w-[410px] max-w-[410px] h-[520px] max-h-[75vh] sm:max-h-[85vh] bg-white rounded-xl shadow-2xl border border-[#E4E7EC] flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200"
+          className="fixed inset-x-2 bottom-16 sm:bottom-5 sm:right-5 sm:inset-x-auto w-auto sm:w-[410px] max-w-[410px] h-[82vh] sm:h-[540px] max-h-[85vh] bg-white rounded-2xl shadow-2xl border border-[#E4E7EC] flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200 z-50"
         >
           {/* Institutional Header */}
-          <div className="bg-[#17324D] text-white p-4 flex items-center justify-between border-b border-[#224466]">
+          <div className="bg-[#17324D] text-white p-3.5 sm:p-4 flex items-center justify-between border-b border-[#224466]">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-md bg-[#224466] border border-[#2c5580] flex items-center justify-center text-[#167A5B]">
                 <Headphones className="w-4 h-4 text-emerald-300" />
@@ -509,7 +599,10 @@ export const CustomerChatbot: React.FC = () => {
               <div>
                 <div className="flex items-center gap-1.5">
                   <span className="text-xs sm:text-sm font-bold tracking-tight text-white">
-                    Help &amp; Support Desk
+                    How can we help?
+                  </span>
+                  <span className="text-[10px] text-emerald-300 font-medium hidden sm:inline">
+                    • Help &amp; Support
                   </span>
                 </div>
                 <div className="text-[10px] text-slate-300 font-medium">
@@ -556,9 +649,9 @@ export const CustomerChatbot: React.FC = () => {
                 id="chatbot-reset-btn"
                 onClick={handleResetChat}
                 title="Restart chat"
-                className="p-1.5 rounded-xl hover:bg-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                className="p-2 rounded-xl hover:bg-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer"
               >
-                <RotateCcw className="w-3.5 h-3.5" />
+                <RotateCcw className="w-4 h-4" />
               </button>
 
               {/* Close Button */}
@@ -568,10 +661,35 @@ export const CustomerChatbot: React.FC = () => {
                   setIsOpen(false);
                   window.speechSynthesis?.cancel();
                 }}
-                className="p-1.5 rounded-xl hover:bg-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                className="min-h-[44px] min-w-[44px] p-2 rounded-xl hover:bg-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer flex items-center justify-center"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
+            </div>
+          </div>
+
+          {/* 6 Quick Action Support Options with touch targets >= 44px */}
+          <div className="bg-[#FAF8F5] border-b border-[#E4E7EC] p-2.5 sm:p-3">
+            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-1 mb-2 flex items-center justify-between">
+              <span>Quick Support Options</span>
+              <span className="text-[9px] font-semibold text-[#167A5B]">Direct Assistance</span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {supportOptions.map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => {
+                    handleSend(chatLang === 'hi' ? opt.hi : chatLang === 'pa' ? opt.pa : opt.label);
+                  }}
+                  className="min-h-[44px] px-2.5 py-2 rounded-xl bg-white border border-[#D0D5DD] hover:border-[#17324D] hover:bg-[#EDF7F2] text-left text-[11px] font-bold text-slate-800 transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer truncate"
+                >
+                  <span className="w-2 h-2 rounded-full bg-[#167A5B] shrink-0" />
+                  <span className="truncate">
+                    {chatLang === 'hi' ? opt.hi : chatLang === 'pa' ? opt.pa : opt.label}
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
 

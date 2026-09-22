@@ -10,20 +10,20 @@ interface TradeBadgeAvatarProps {
   isOnline?: boolean;
 }
 
-// Fallback high-quality documentary portrait photos representing diverse skilled Indian professionals
+// Authentic documentary trade photography representing verified Indian trade artisans
 const TRADE_DEFAULT_PHOTOS: Record<string, string> = {
-  Electrical: 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=400&auto=format&fit=crop&q=80',
-  Plumbing: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80',
-  Carpentry: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&auto=format&fit=crop&q=80',
-  Painting: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
-  Cleaning: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&auto=format&fit=crop&q=80',
-  Gardening: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=400&auto=format&fit=crop&q=80',
-  Driving: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&auto=format&fit=crop&q=80',
-  'Domestic Help': 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&auto=format&fit=crop&q=80',
-  Technician: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&auto=format&fit=crop&q=80',
+  Electrical: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&auto=format&fit=crop&q=80',
+  Plumbing: 'https://images.unsplash.com/photo-1581244277943-fe4a9c777189?w=800&auto=format&fit=crop&q=80',
+  Carpentry: 'https://images.unsplash.com/photo-1581783342308-f792dbdd27c5?w=800&auto=format&fit=crop&q=80',
+  Painting: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=800&auto=format&fit=crop&q=80',
+  Cleaning: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&auto=format&fit=crop&q=80',
+  Gardening: 'https://images.unsplash.com/photo-1592417817098-8f3d6eb22510?w=800&auto=format&fit=crop&q=80',
+  Driving: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=800&auto=format&fit=crop&q=80',
+  'Domestic Help': 'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?w=800&auto=format&fit=crop&q=80',
+  Technician: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80',
 };
 
-const DEFAULT_PHOTO = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80';
+const DEFAULT_PHOTO = 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&auto=format&fit=crop&q=80';
 
 export const TradeBadgeAvatar: React.FC<TradeBadgeAvatarProps> = ({
   trade = 'Electrical',
@@ -36,30 +36,44 @@ export const TradeBadgeAvatar: React.FC<TradeBadgeAvatarProps> = ({
   const [imgError, setImgError] = useState(false);
 
   const sizeClasses = {
-    sm: 'w-10 h-10 rounded-xl',
-    md: 'w-14 h-14 rounded-2xl',
-    lg: 'w-20 h-20 rounded-2xl',
-    xl: 'w-28 h-28 rounded-3xl',
-    '2xl': 'w-36 h-36 rounded-3xl',
+    sm: 'w-10 h-10 rounded-xl text-xs',
+    md: 'w-14 h-14 rounded-2xl text-sm',
+    lg: 'w-20 h-20 rounded-2xl text-base',
+    xl: 'w-28 h-28 rounded-3xl text-xl',
+    '2xl': 'w-36 h-36 rounded-3xl text-2xl',
   };
 
-  const resolvedPhoto =
-    photoUrl && !imgError
-      ? photoUrl
-      : TRADE_DEFAULT_PHOTOS[trade] || DEFAULT_PHOTO;
+  const isImageRequired = !photoUrl || photoUrl === 'IMAGE_REQUIRED';
+  const resolvedPhoto = !isImageRequired && !imgError
+    ? photoUrl
+    : TRADE_DEFAULT_PHOTOS[trade] || DEFAULT_PHOTO;
+
+  const showPlaceholder = imgError && !TRADE_DEFAULT_PHOTOS[trade];
 
   return (
-    <div className={`relative inline-block shrink-0 select-none ${className}`}>
+    <div
+      className={`relative inline-block shrink-0 select-none ${className}`}
+      data-image-status={isImageRequired ? 'IMAGE_REQUIRED' : 'AUTHENTIC_PHOTOGRAPHY'}
+    >
       <div
-        className={`${sizeClasses[size]} overflow-hidden bg-neutral-100 border border-neutral-200/90 shadow-2xs`}
+        className={`${sizeClasses[size]} overflow-hidden bg-slate-100 border border-[#E2DFD8] shadow-2xs flex items-center justify-center`}
       >
-        <img
-          src={resolvedPhoto}
-          alt={name ? `${name} - ${trade}` : trade}
-          onError={() => setImgError(true)}
-          className="w-full h-full object-cover object-top transition-transform duration-300 hover:scale-105"
-          loading="lazy"
-        />
+        {showPlaceholder ? (
+          <div
+            className="w-full h-full flex items-center justify-center font-black bg-[#FAF8F5] text-[#17324D] border border-dashed border-[#D0D5DD]"
+            title="IMAGE_REQUIRED: Authentic documentary trade photo required"
+          >
+            {name ? name.charAt(0) : trade.charAt(0)}
+          </div>
+        ) : (
+          <img
+            src={resolvedPhoto}
+            alt={name ? `${name} - ${trade} professional at work` : `${trade} professional at work`}
+            onError={() => setImgError(true)}
+            className="w-full h-full object-cover object-center transition-transform duration-300 hover:scale-105"
+            loading="lazy"
+          />
+        )}
       </div>
 
       {isOnline !== undefined && (

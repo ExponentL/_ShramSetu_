@@ -12,14 +12,14 @@
   --color-navy: #17324D;
   --color-navy-hover: #112538;
   --color-slate: #3F4A54;
-  --color-warm-bg: #F7F8F6;
+  --color-warm-bg: #FAF8F5;
   --color-surface: #FFFFFF;
   --color-inst-green: #167A5B;
   --color-inst-green-hover: #126349;
   --color-dark-red: #B42318;
   --color-saffron: #C25E00;
-  --color-border: #D0D5DD;
-  --color-border-light: #E4E7EC;
+  --color-border: #E2DFD8;
+  --color-border-light: #EBE8E1;
 }
 
 html {

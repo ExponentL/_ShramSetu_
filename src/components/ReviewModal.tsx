@@ -136,10 +136,10 @@ export const ReviewModal: React.FC = () => {
               );
             })()}
 
-            {/* Star Selection (1-5) */}
-            <div className="text-center py-2">
-              <label className="text-xs font-semibold text-neutral-700 block mb-2">
-                {language === 'hi' ? 'सेवा गुणवत्ता रेटिंग (1 से 5 सितारे)' : 'Rate Service Quality (1 to 5 Stars)'}
+            {/* Large Star Selector */}
+            <div className="text-center py-2 space-y-2">
+              <label className="text-xs font-bold text-slate-700 block">
+                {language === 'hi' ? 'सेवा रेटिंग' : 'Overall Rating'}
               </label>
               <div className="flex items-center justify-center gap-2">
                 {[1, 2, 3, 4, 5].map((star) => (
@@ -149,39 +149,58 @@ export const ReviewModal: React.FC = () => {
                     onClick={() => setRating(star)}
                     onMouseEnter={() => setHoverRating(star)}
                     onMouseLeave={() => setHoverRating(0)}
-                    className="p-1 text-neutral-300 hover:scale-110 transition-transform cursor-pointer"
+                    className="min-h-[48px] min-w-[48px] p-1.5 text-neutral-300 hover:scale-110 transition-transform cursor-pointer flex items-center justify-center"
+                    aria-label={`${star} star`}
                   >
                     <Star
-                      className={`w-8 h-8 ${
+                      className={`w-9 h-9 sm:w-10 sm:h-10 ${
                         star <= (hoverRating || rating)
                           ? 'text-amber-500 fill-amber-400'
-                          : 'text-neutral-200'
+                          : 'text-slate-200'
                       }`}
                     />
                   </button>
                 ))}
               </div>
-              <div className="text-xs font-bold text-neutral-800 mt-1">
+              <div className="text-xs font-bold text-[#17324D]">
                 {ratingDescriptions[rating] || ''}
               </div>
             </div>
 
+            {/* Rating Dimensions: Service Quality, Punctuality, Professionalism */}
+            <div className="grid grid-cols-3 gap-2 pt-1">
+              {[
+                { label: 'Service Quality', hi: 'उत्कृष्ट गुणवत्ता' },
+                { label: 'Punctuality', hi: 'समय की पाबंदी' },
+                { label: 'Professionalism', hi: 'पेशेवर आचरण' },
+              ].map((dim) => (
+                <div
+                  key={dim.label}
+                  className="min-h-[44px] p-2 rounded-xl bg-[#EDF7F2] border border-[#C6E7D8] text-center flex flex-col items-center justify-center shadow-2xs"
+                >
+                  <span className="text-[10px] font-bold text-[#167A5B] flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-[#167A5B]" />
+                    <span>✓ Rated</span>
+                  </span>
+                  <span className="text-[11px] font-bold text-slate-800 leading-tight mt-0.5">
+                    {dim.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+
             {/* Written Comments */}
             <div>
-              <label className="text-xs font-semibold text-neutral-700 block mb-1.5">
-                {language === 'hi' ? 'लिखित समीक्षा एवं प्रतिक्रिया' : 'Written Review & Feedback'}
+              <label className="text-xs font-bold text-slate-700 block mb-1.5">
+                Comment
               </label>
               <textarea
                 rows={4}
                 required
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                placeholder={
-                  language === 'hi'
-                    ? 'समय की पाबंदी, कौशल, व्यवहार और दरों के संबंध में अपना अनुभव साझा करें...'
-                    : 'Share your experience regarding punctuality, skill, behavior, and charges...'
-                }
-                className="w-full p-3.5 rounded-xl border border-neutral-300 text-xs focus:ring-2 focus:ring-neutral-900 focus:outline-none"
+                placeholder="Write your experience..."
+                className="w-full p-3.5 rounded-xl border border-neutral-300 text-sm focus:ring-2 focus:ring-[#17324D] focus:outline-none bg-white"
               />
             </div>
 
@@ -190,15 +209,15 @@ export const ReviewModal: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setReviewTargetBooking(null)}
-                className="px-4 py-2 rounded-xl border border-neutral-200 hover:bg-neutral-100 text-neutral-700 text-xs font-bold transition-colors cursor-pointer"
+                className="min-h-[44px] px-4 py-2 rounded-xl border border-neutral-300 hover:bg-neutral-100 text-neutral-700 text-xs font-bold transition-colors cursor-pointer flex items-center justify-center"
               >
                 {t.common.cancel}
               </button>
               <button
                 type="submit"
-                className="px-6 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-bold transition-colors cursor-pointer shadow-sm"
+                className="min-h-[44px] px-6 py-2 rounded-xl bg-[#17324D] hover:bg-[#112437] text-white text-xs font-bold transition-colors cursor-pointer shadow-sm flex items-center justify-center btn-tactile"
               >
-                {language === 'hi' ? 'समीक्षा प्रकाशित करें' : 'Publish Review'} →
+                <span>Submit Review</span>
               </button>
             </div>
           </form>
